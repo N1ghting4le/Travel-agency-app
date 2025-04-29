@@ -67,4 +67,4 @@ volumes:
 
 networks:
   kursach-network:
-    external: true
+    external: false

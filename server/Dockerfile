@@ -1,14 +1,27 @@
-# Используем базовый образ с OpenJDK 21
-FROM openjdk:21-oracle
+# Используем официальный образ Maven с JDK 21 для сборки
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Устанавливаем рабочую директорию внутри контейнера
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем JAR-файл в контейнер
-COPY target/kursach-server-0.0.1-SNAPSHOT.jar app.jar
+# Копируем файлы проекта в контейнер
+COPY pom.xml .
+COPY src ./src
 
-# Открываем порт, который использует приложение
+# Собираем проект
+RUN mvn clean package -DskipTests
+
+# Используем лёгкий образ с JDK 21 для запуска
+FROM openjdk:21-oracle
+
+# Устанавливаем рабочую директорию
+WORKDIR /app
+
+# Копируем собранный JAR из стадии сборки
+COPY --from=build /app/target/kursach-server-0.0.1-SNAPSHOT.jar app.jar
+
+# Открываем порт
 EXPOSE 8080
 
-# Команда для запуска приложения
+# Запускаем приложение
 ENTRYPOINT ["java", "-jar", "app.jar"]
