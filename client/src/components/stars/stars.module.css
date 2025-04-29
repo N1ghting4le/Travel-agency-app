@@ -1,0 +1,19 @@
+.wrapper {
+    display: flex;
+    gap: 5px;
+}
+
+.star {
+    cursor: pointer;
+    font-size: 18px;
+    font-family: var(--font-icon);
+}
+
+.star::before {
+    color: #acacac;
+    content: "\E854";
+}
+
+.star.active::before {
+    color: rgb(255, 163, 0);
+}

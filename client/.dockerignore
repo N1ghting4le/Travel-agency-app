@@ -1,0 +1,10 @@
+Dockerfile
+.dockerignore
+README.md
+.vscode
+node_modules
+.env
+.next
+.git
+.github
+docker-compose.yml

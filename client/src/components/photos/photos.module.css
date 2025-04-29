@@ -1,0 +1,34 @@
+.photosWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.photoGrid {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.image {
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.removeIcon {
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    font-family: var(--font-icon);
+    width: 200px;
+    border: none;
+    background: transparent;
+}
+
+.removeIcon::before {
+    content: "\E80E";
+    color: #000;
+}

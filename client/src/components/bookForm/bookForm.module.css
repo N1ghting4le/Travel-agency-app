@@ -1,0 +1,55 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    font-family: var(--font-montserrat);
+}
+
+.fields {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.calendarWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.priceWrapper {
+    font-size: 20px;
+}
+
+.price {
+    font-size: 32px;
+    font-weight: 700;
+    color: salmon;
+}
+
+@media (max-width: 593px) {
+    .form {
+        font-size: 14px;
+        gap: 30px;
+    }
+
+    .fields {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .calendarWrapper {
+        gap: 5px;
+    }
+
+    .priceWrapper {
+        font-size: 16px;
+    }
+
+    .price {
+        font-size: 20px;
+    }
+}

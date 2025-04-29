@@ -1,0 +1,20 @@
+.loader {
+    width: 50.5px;
+    height: 50px;
+    transform: scale(0.8);
+}
+
+.corners {
+    fill: none;
+    stroke-width: 7;
+    stroke: #F08640;
+    stroke-dasharray: 25;
+    animation: dash infinite 1.5s ease;
+    -webkit-animation: dash infinite 1.5s ease;
+}
+
+@keyframes dash {
+    100% {
+        stroke-dashoffset: -50;
+    }
+}

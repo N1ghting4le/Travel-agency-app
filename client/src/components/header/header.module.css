@@ -1,0 +1,35 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100vw;
+    padding: 21px 104px;
+    box-shadow: 0px 4px 16px 0px #1122110D;
+}
+
+.link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.accountBtn {
+    border: none;
+    border-radius: 8px;
+    height: 48px;
+    padding-inline: 20px;
+    font-family: var(--font-montserrat);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+@media (max-width: 593px) {
+    .header {
+        padding: 10.5px 20px;
+    }
+
+    .btnWrapper {
+        display: none;
+    }
+}

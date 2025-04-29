@@ -1,0 +1,146 @@
+.main {
+    font-family: var(--font-montserrat);
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    padding: 60px 104px;
+    gap: 50px;
+    font-size: 18px;
+}
+
+.tourInfo {
+    display: flex;
+    justify-content: space-between;
+}
+
+.tourInfoItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.tourInfoItemTitle, .addressWrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.bold {
+    font-weight: 500;
+}
+
+.priceWrapper {
+    align-self: center;
+}
+
+.price {
+    font-size: 32px;
+    font-weight: 700;
+    color: salmon;
+}
+
+.hotelInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.hotelInfoTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.mainHotelInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn {
+    padding-inline: 20px;
+    height: 48px;
+    background: #8DD3BB;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-montserrat);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.photoBtn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+}
+
+.photos {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    height: 550px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.photo {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.photo:first-child {
+    grid-row: 1 / 3;
+    grid-column: 1 / 3;
+}
+
+@media (max-width: 593px) {
+    .main {
+        padding: 16px;
+        gap: 25px;
+        font-size: 16px;
+    }
+
+    .tourInfo {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .tourInfoItem {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .priceWrapper {
+        align-self: flex-start;
+    }
+
+    .hotelInfoTop {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+
+    .addressWrapper {
+        align-items: flex-start;
+    }
+
+    .photos {
+        display: block;
+        height: 328px;
+    }
+    
+    .photo {
+        aspect-ratio: 1 / 1;
+    }
+
+    .photo:not(:first-child) {
+        display: none;
+    }
+}

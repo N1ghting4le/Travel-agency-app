@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: db
+    environment:
+      POSTGRES_DB: Travel_agency
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Upstream110
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kursach-network
+
+  kursach-server:
+    image: n1ghting4le/kursach-server:latest
+    container_name: server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      TOKEN_SECRET: d92cb64f0aa1b9b622e47b187bf39bcfaf65b4bddc02bf0c1c00a92b8bd4d215ea6212f04515a64e67b206fc39360631cc9d3da0913a289ef1bfb02d8bdd8ed1
+      ADMIN_EMAIL: admin@golobe.by
+      ADMIN_PASSWORD: Upstream110
+      DB_URL: jdbc:postgresql://db:5432/Travel_agency
+      DB_USERNAME: postgres
+      DB_PASSWORD: Upstream110
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - kursach-network
+  
+  next-app:
+    image: n1ghting4le/kursach-client:latest
+    container_name: next-js
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_URL: http://localhost:8080
+    restart: always
+    ports:
+      - 3001:3001
+    environment:
+      BASE_URL: http://server:8080
+    depends_on: [kursach-server]
+    networks:
+      - kursach-network
+
+volumes:
+  postgres_data:
+  uploads:
+
+networks:
+  kursach-network:
+    external: true

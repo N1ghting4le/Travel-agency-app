@@ -1,0 +1,15 @@
+.starsWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stars {
+    display: flex;
+    gap: 2px;
+}
+
+.text {
+    font-weight: 500;
+    white-space: nowrap;
+}

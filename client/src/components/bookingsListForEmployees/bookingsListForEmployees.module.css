@@ -1,0 +1,29 @@
+.userInfoWrapper {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn {
+    padding-inline: 20px;
+    height: 48px;
+    background: #8DD3BB;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-montserrat);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btnWrapper {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+}
+
+.filterContainer {
+    display: flex;
+    gap: 30px;
+}

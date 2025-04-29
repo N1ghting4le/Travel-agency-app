@@ -1,0 +1,14 @@
+.btn {
+    height: 48px;
+    border: none;
+    border-radius: 4px;
+    background-color: #8DD3BB;
+    font-family: var(--font-montserrat);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn:disabled {
+    cursor: default;
+}

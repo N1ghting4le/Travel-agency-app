@@ -1,0 +1,33 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+    font-family: var(--font-montserrat);
+    font-size: 18px;
+}
+
+.fieldWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.submitWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 593px) {
+    .form {
+        font-size: 14px;
+        gap: 30px;
+    }
+
+    .fieldWrapper {
+        gap: 5px;
+    }
+}

@@ -1,0 +1,6 @@
+.link {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    width: 100%;
+}

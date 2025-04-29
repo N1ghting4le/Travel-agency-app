@@ -1,0 +1,32 @@
+.form {
+    width: min(100%, 640px);
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.textFieldsWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.starsWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkboxWrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.submitWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}

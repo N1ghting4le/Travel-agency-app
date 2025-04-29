@@ -1,0 +1,16 @@
+.main {
+    font-family: var(--font-montserrat);
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    padding: 60px 104px;
+    gap: 50px;
+    font-size: 18px;
+}
+
+@media (max-width: 593px) {
+    .main {
+        padding: 16px;
+        gap: 30px;
+    }
+}

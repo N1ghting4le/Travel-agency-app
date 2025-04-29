@@ -1,0 +1,10 @@
+.chipContainer {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    max-width: 160px;
+}
+
+.chipContainer::-webkit-scrollbar {
+    height: 0;
+}

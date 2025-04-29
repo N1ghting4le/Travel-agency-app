@@ -1,0 +1,17 @@
+@media (max-width: 593px) {
+    .MuiInputBase-root .MuiInputBase-input {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .MuiFormControl-root .MuiInputLabel-root:not(.MuiInputLabel-shrink) {
+        transform: translate(14px, 10px);
+        font-size: 14px;
+    }
+
+    .MuiFormControl-root .MuiFormHelperText-root,
+    .MuiFormControl-root .MuiFormHelperText-root.Mui-error {
+        font-size: 14px;
+        line-height: normal;
+    }
+}

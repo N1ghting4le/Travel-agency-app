@@ -1,0 +1,70 @@
+.footer {
+    width: 100vw;
+    padding: 70px 100px;
+    display: flex;
+    justify-content: space-between;
+    background-color: #8DD3BB;
+    font-family: var(--font-montserrat);
+    font-size: 18px;
+}
+
+.icons {
+    margin-top: 20px;
+    display: flex;
+    gap: 8px;
+}
+
+.cities {
+    display: flex;
+    flex-flow: column wrap;
+    row-gap: 20px;
+    column-gap: 50px;
+    max-height: 200px;
+}
+
+.contactsWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.contact {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+@media (max-width: 593px) {
+    .footer {
+        padding: 30px 16px;
+    }
+
+    .cities {
+        display: none;
+    }
+
+    .logoAndIcons {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: fit-content;
+    }
+
+    .logo {
+        transform: scale(0.8);
+    }
+
+    .icons {
+        margin-top: 10px;
+    }
+
+    .icon {
+        font-size: 20px;
+    }
+
+    .contactsWrapper {
+        gap: 10px;
+        font-size: 14px;
+    }
+}

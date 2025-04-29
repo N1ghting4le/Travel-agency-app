@@ -1,0 +1,32 @@
+.modalContent {
+    width: 768px;
+    overflow-x: hidden;
+}
+
+.btn {
+    padding-inline: 20px;
+    height: 48px;
+    background: #8DD3BB;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-montserrat);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.close {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    font-size: 34px;
+    transform: rotate(45deg);
+    width: fit-content;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .modalContent {
+        width: 100% !important;
+    }
+}

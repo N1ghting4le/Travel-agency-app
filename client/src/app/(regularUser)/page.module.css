@@ -1,0 +1,71 @@
+.main {
+  font-family: var(--font-montserrat);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100vw;
+  background: #FAFBFC;
+  padding-bottom: 70px;
+}
+
+.bg {
+  width: 100%;
+  height: 537px;
+}
+
+.bgGradient {
+  background: linear-gradient(90deg, rgba(0, 35, 77, 0.63) 11.46%, rgba(0, 35, 77, 0) 77.37%);
+  z-index: 1;
+}
+
+.bgImage {
+  position: absolute;
+}
+
+.sloganWrapper {
+  position: absolute;
+  left: 120px;
+  top: 80px;
+  width: 440px;
+  color: #fff;
+}
+
+.slogan {
+  font-size: 40px;
+  font-weight: 500;
+}
+
+.subSlogan {
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+@media (max-width: 593px) {
+  .bg {
+    height: 300px;
+  }
+
+  .bgImage {
+    object-fit: cover;
+  }
+
+  .sloganWrapper {
+    left: 52px;
+    top: 20px;
+    width: 300px;
+  }
+
+  .slogan {
+    font-size: 30px;
+  }
+
+  .subSlogan {
+    font-size: 16px;
+    margin-top: 8px;
+  }
+
+  .main {
+    padding-bottom: 52px;
+  }
+}

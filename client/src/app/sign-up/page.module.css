@@ -1,0 +1,32 @@
+.main {
+    display: flex;
+    gap: 104px;
+    width: 100vw;
+    padding: 50px 104px;
+    font-family: var(--font-montserrat);
+    min-height: 100vh;
+}
+
+.picture {
+    width: 486.42px;
+    height: calc(100vh - 100px);
+    border-radius: 30px;
+    object-fit: cover;
+}
+
+.container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 45px;
+}
+
+@media (max-width: 593px) {
+    .main {
+        padding: 16px;
+    }
+
+    .picture {
+        display: none;
+    }
+}

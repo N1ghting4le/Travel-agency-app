@@ -1,0 +1,16 @@
+.bookingsList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.listItem {
+    list-style-type: none;
+    background: #fff;
+    padding: 32px 24px;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0px 4px 16px rgba(17, 34, 17, 0.05);
+    border-radius: 16px;
+}

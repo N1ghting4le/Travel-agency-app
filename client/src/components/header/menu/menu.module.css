@@ -1,0 +1,14 @@
+.menu {
+    display: none;
+}
+
+.link {
+    width: 100%;
+    padding: 6px 16px;
+}
+
+@media (max-width: 593px) {
+    .menu {
+        display: block;
+    }
+}
