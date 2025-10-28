@@ -47,10 +47,4 @@ public class TourController {
     public TourDTO getTour(@Valid @PathVariable @NotNull UUID id) throws NotFoundException {
         return tourService.getTour(id);
     }
-    @DeleteMapping("/delete")
-    @RolesAllowed("ADMIN")
-    public ResponseEntity<?> deleteMarkedTours() {
-        tourService.deleteMarkedTours();
-        return ResponseEntity.noContent().build();
-    }
 }

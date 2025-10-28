@@ -81,11 +81,4 @@ public class TourService {
 
         return new TourDTO(tour);
     }
-    public void deleteMarkedTours() {
-        tourRepository.findByDeleteIsTrue().forEach(t -> {
-            if (t.getBookings().isEmpty()) {
-                tourRepository.delete(t);
-            }
-        });
-    }
 }

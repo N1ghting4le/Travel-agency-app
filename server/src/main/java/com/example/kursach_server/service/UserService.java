@@ -79,8 +79,6 @@ public class UserService {
             throw new IncorrectPasswordException("Неверный пароль");
         }
 
-        removeOldBookings(user);
-
         return new UserWithTokenDTO(jwtTokenUtil.generateToken(user.getEmail(), "ROLE_" + user.getRole()), user);
     }
 
@@ -94,14 +92,6 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotExistsException("Пользователя не существует"));
 
-        removeOldBookings(user);
-
         return new UserWithTokenDTO(jwtTokenUtil.generateToken(email, "ROLE_" + user.getRole()), user);
-    }
-    private void removeOldBookings(User user) {
-        long now = new Date().getTime();
-
-        user.getBookings().removeIf(b -> b.getEndDate().getTime() < now);
-        userRepository.save(user);
     }
 }
