@@ -1,0 +1,17 @@
+.selectMenusWrapper {
+  display: flex;
+  gap: 20px;
+}
+
+.barContainer {
+  height: 400px;
+  width: 700px;
+}
+
+.chartsWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 50px;
+  row-gap: 20px;
+  place-items: center;
+}

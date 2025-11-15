@@ -1,6 +1,7 @@
 import styles from "./page.module.css";
 import TourForm from "@/components/tourForm/TourForm";
 import { redirect } from "next/navigation";
+import { BASE_URL } from "@/env";
 
 export const metadata = {
     title: "Редактирование тура"
@@ -15,7 +16,7 @@ export const getData = async (url) => {
 }
 
 const EditTourPage = async ({ params }) => {
-    const { hotel, ...tour } = await getData(`${process.env.BASE_URL}/tour/get/${params.id}`);
+    const { hotel, ...tour } = await getData(`${BASE_URL}/tour/get/${params.id}`);
     const tourObj = { ...tour, hotelTitle: hotel.hotelTitle };
 
     return (

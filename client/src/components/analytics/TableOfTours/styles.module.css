@@ -1,0 +1,103 @@
+.wrapper {
+  border: 1px solid rgba(0, 0, 0, 0.23);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  color: rgb(68, 68, 68);
+  font-variant-numeric: tabular-nums;
+}
+
+.tableWrapper {
+  height: 500px;
+  overflow-y: scroll;
+}
+
+.tableWrapper::-webkit-scrollbar-track:vertical {
+  margin-top: 30px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background-color: #d0d0d0;
+}
+
+.wrapper::before {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 0;
+  height: 30px;
+  width: 6px;
+  background-color: #dfdfdf;
+}
+
+.table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.23);
+  border-radius: 6px;
+}
+
+.tableHeader,
+.tableCell {
+  height: 30px;
+  border-inline: 1px solid rgba(0, 0, 0, 0.23);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline: 10px;
+}
+
+.tableHeader {
+  border-top: none;
+  position: sticky;
+  top: 0;
+  background-color: #dfdfdf;
+}
+
+.tableCell {
+  text-align: center;
+}
+
+.tableCell:first-of-type,
+.tableHeader:first-of-type {
+  border-left: none;
+}
+
+.tableCell:last-of-type,
+.tableHeader:last-of-type {
+  border-right: none;
+}
+
+.tableRow:last-of-type .tableCell {
+  border-bottom: none;
+}
+
+.tableRow:nth-of-type(even) {
+  background-color: #f1f1f1;
+}
+
+.tableRow:hover,
+.tableRow:nth-of-type(even):hover {
+  background-color: #e7e7e7;
+}
+
+.tableRow:hover .link {
+  text-decoration: underline;
+}
+
+.pagination {
+  border-top: 1px solid rgba(0, 0, 0, 0.23);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn {
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  height: 24px;
+  cursor: pointer;
+}

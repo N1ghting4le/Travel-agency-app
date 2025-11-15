@@ -12,7 +12,7 @@ import PinDropIcon from "@mui/icons-material/PinDrop";
 import { getData } from "@/app/(adminOrEmployee)/admin/edit-tour/[id]/page";
 
 const TourPage = async ({ params }) => {
-  const tour = await getData(`${process.env.BASE_URL}/tour/get/${params.id}`);
+  const tour = await getData(`${BASE_URL}/tour/get/${params.id}`);
   const {
     departureCity,
     destinationCountry,
