@@ -1,11 +1,16 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 
-const ResetHoc = (Component) => function WrappedComponent(props) {
+const ResetHoc = (Component) =>
+  function WrappedComponent(props) {
     const [resetKey, setResetKey] = useState(true);
-    
-    return <Component key={resetKey} {...props} reset={() => setResetKey(!resetKey)}/>;
-}
+
+    const reset = () => {
+      setResetKey((key) => !key);
+    };
+
+    return <Component key={resetKey} {...props} reset={reset} />;
+  };
 
 export default ResetHoc;

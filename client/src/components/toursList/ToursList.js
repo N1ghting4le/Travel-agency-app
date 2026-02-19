@@ -1,143 +1,161 @@
-'use client';
+"use client";
 
 import styles from "./toursList.module.css";
-import { labelStyle } from "../input/Input";
 import Image from "next/image";
 import AccordionContainer from "../accordionContainer/AccordionContainer";
 import ToursListItem from "../toursListItem/ToursListItem";
 import TourLoading from "../loadingSpinners/TourLoading";
 import { Checkbox, FormControlLabel, Slider } from "@mui/material";
 import { useState } from "react";
-import { useTours } from "../GlobalContext";
+import { useTours } from "../globalContext/hooks/useTours";
 import icon from "../../public/landing_icon.png";
 import nutritionTypes from "@/lists/nutritionTypes";
 import roomTypes from "@/lists/roomTypes";
+import {
+  MIN_PRICE,
+  MAX_PRICE,
+  RATING_VALUES,
+  checkboxStyle,
+  formControlLabelStyle,
+  sliderStyle,
+} from "./constants";
+import { filterTours } from "./utils";
 
-const ToursList = ({ queryState }) => {
-    const min = 50, max = 1200;
-    const { tours } = useTours();
-    const [priceRange, setPriceRange] = useState([min, max]);
-    const [minRating, setMinRating] = useState(0);
-    const [activeNutrTypes, setActiveNutrTypes] = useState(nutritionTypes.map(type => type.value));
-    const [activeRoomTypes, setActiveRoomTypes] = useState(roomTypes.map(type => type.value));
+const ToursList = ({ isLoading, isError }) => {
+  const { tours } = useTours();
+  const [priceRange, setPriceRange] = useState([MIN_PRICE, MAX_PRICE]);
+  const [minRating, setMinRating] = useState(0);
+  const [activeNutrTypes, setActiveNutrTypes] = useState(
+    nutritionTypes.map((type) => type.value),
+  );
+  const [activeRoomTypes, setActiveRoomTypes] = useState(
+    roomTypes.map((type) => type.value),
+  );
 
-    const handleSliderChange = (_, newRange) => setPriceRange(newRange);
+  const handleSliderChange = (_, newRange) => {
+    setPriceRange(newRange);
+  };
 
-    const toggleCheckbox = (e, setter) => {
-        if (e.target.checked) {
-            setter(arr => [...arr, e.target.value]);
-        } else {
-            setter(arr => arr.filter(item => item !== e.target.value));
+  const toggleCheckbox = (setter) => (e) => {
+    const value = e.target.value;
+
+    if (e.target.checked) {
+      setter((arr) => [...arr, value]);
+    } else {
+      setter((arr) => arr.filter((item) => item !== value));
+    }
+  };
+
+  const handleRatingClick = (rating) => () => {
+    setMinRating(rating);
+  };
+
+  const renderCheckboxFields = (arr, setter) =>
+    arr.map(({ value, descr }) => (
+      <FormControlLabel
+        key={value}
+        control={
+          <Checkbox
+            value={value}
+            sx={checkboxStyle}
+            size="small"
+            defaultChecked
+            onClick={toggleCheckbox(setter)}
+          />
         }
-    }
+        label={descr}
+        sx={formControlLabelStyle}
+      />
+    ));
 
-    const renderCheckboxFields = (arr, setter) => arr.map(item => {
-        const { value, descr } = item;
+  const filteredTours = filterTours(
+    tours,
+    priceRange,
+    minRating,
+    activeNutrTypes,
+    activeRoomTypes,
+  );
 
-        return (
-            <FormControlLabel
-                key={value}
-                control={
-                    <Checkbox
-                        value={value}
-                        sx={{
-                            marginLeft: "10px",
-                            "&.MuiCheckbox-root": {
-                                paddingBlock: "2.5px"
-                            }
-                        }}
-                        size="small"
-                        defaultChecked
-                        onClick={(e) => toggleCheckbox(e, setter)}/>
-                }
-                label={`${value} - ${descr}`}
-                sx={{
-                    "& .MuiFormControlLabel-label": { 
-                        fontFamily: labelStyle.fontFamily,
-                        fontWeight: 500,
-                        fontSize: "14px",
-                        alignSelf: "center"
-                    },
-                    alignItems: "flex-start"
-                }}
-            />
-        );
-    });
+  const nutritionTypesCheckboxes = renderCheckboxFields(
+    nutritionTypes,
+    setActiveNutrTypes,
+  );
+  const roomTypesCheckboxes = renderCheckboxFields(
+    roomTypes,
+    setActiveRoomTypes,
+  );
 
-    const renderListItems = () => tours.filter(tour => {
-        const { basePrice, avgMark, hotel } = tour;
-        const { nutritionTypes, roomTypes } = hotel;
+  if (isLoading) {
+    return <TourLoading />;
+  }
 
-        return basePrice >= priceRange[0] && basePrice <= priceRange[1] && avgMark >= minRating
-                && nutritionTypes.some(type => activeNutrTypes.includes(type))
-                && roomTypes.some(type => activeRoomTypes.includes(type))
-    }).map(tour => <ToursListItem key={tour.id} tour={tour}/>);
+  if (isError) {
+    return <p>Произошла ошибка</p>;
+  }
 
-    switch (queryState) {
-        case "pending": return <TourLoading/>;
-        case "error": return <p>Произошла ошибка</p>;
-    }
-
-    const listItems = renderListItems();
-
-    return tours.length ? (
-        <div className={styles.wrapper}>
-            <div className={styles.filters}>
-                <p className={styles.title}>Фильтры</p>
-                <AccordionContainer titleEl={<p className={styles.subTitle}>Цена</p>}>
-                    <div className={styles.sliderWrapper}>
-                        <Slider
-                            value={priceRange}
-                            min={min}
-                            max={max}
-                            onChange={handleSliderChange}
-                            valueLabelDisplay="auto"
-                            sx={{
-                                width: "94%",
-                                margin: "0 auto",
-                                ".MuiSlider-thumb": {
-                                    color: "#8DD3BB"
-                                },
-                                ".MuiSlider-track, .MuiSlider-rail": {
-                                    color: "#112211",
-                                    height: 2
-                                }
-                            }}
-                        />
-                        <p className={styles.edgePrice}>${min}</p>
-                        <p className={styles.edgePrice}>${max}</p>
-                    </div>
-                </AccordionContainer>
-                <AccordionContainer titleEl={<p className={styles.subTitle}>Рейтинг</p>}>
-                    <div className={styles.ratingItems}>
-                        {Array(5).fill().map((_, i) => 
-                            <p key={i} 
-                                className={`${styles.rating} ${minRating === i && styles.activeRating}`}
-                                onClick={() => setMinRating(i)}>{i}+</p>)}
-                    </div>
-                </AccordionContainer>
-                <AccordionContainer titleEl={<p className={styles.subTitle}>Типы питания</p>}>
-                    <div className={styles.checkboxWrapper}>
-                        {renderCheckboxFields(nutritionTypes, setActiveNutrTypes)}
-                    </div>
-                </AccordionContainer>
-                <AccordionContainer titleEl={<p className={styles.subTitle}>Типы номеров</p>}>
-                    <div className={styles.checkboxWrapper}>
-                        {renderCheckboxFields(roomTypes, setActiveRoomTypes)}
-                    </div>
-                </AccordionContainer>
-            </div>
-            <ul className={styles.toursList}>
-                {listItems}
-            </ul>
-        </div>
-    ) : (
-        <div className={styles.noTours}>
-            <div className={styles.bg}/>
-            <p className={styles.noToursText}>Здесь появятся найденные туры</p>
-            <Image src={icon} alt="icon" className={styles.bgImage}/>
-        </div>
+  if (!tours.length) {
+    return (
+      <div className={styles.noTours}>
+        <div className={styles.bg} />
+        <p className={styles.noToursText}>Здесь появятся найденные туры</p>
+        <Image src={icon} alt="icon" className={styles.bgImage} />
+      </div>
     );
-}
+  }
+
+  return (
+    <div className={styles.wrapper}>
+      <div className={styles.filters}>
+        <p className={styles.title}>Фильтры</p>
+        <AccordionContainer titleEl={<p className={styles.subTitle}>Цена</p>}>
+          <div className={styles.sliderWrapper}>
+            <Slider
+              value={priceRange}
+              min={MIN_PRICE}
+              max={MAX_PRICE}
+              onChange={handleSliderChange}
+              valueLabelDisplay="auto"
+              sx={sliderStyle}
+            />
+            <p className={styles.edgePrice}>${MIN_PRICE}</p>
+            <p className={styles.edgePrice}>${MAX_PRICE}</p>
+          </div>
+        </AccordionContainer>
+        <AccordionContainer
+          titleEl={<p className={styles.subTitle}>Рейтинг</p>}
+        >
+          <div className={styles.ratingItems}>
+            {RATING_VALUES.map((rating) => (
+              <p
+                key={rating}
+                className={`${styles.rating} ${minRating === rating ? styles.activeRating : ""}`}
+                onClick={handleRatingClick(rating)}
+              >
+                {rating}+
+              </p>
+            ))}
+          </div>
+        </AccordionContainer>
+        <AccordionContainer
+          titleEl={<p className={styles.subTitle}>Типы питания</p>}
+        >
+          <div className={styles.checkboxWrapper}>
+            {nutritionTypesCheckboxes}
+          </div>
+        </AccordionContainer>
+        <AccordionContainer
+          titleEl={<p className={styles.subTitle}>Типы номеров</p>}
+        >
+          <div className={styles.checkboxWrapper}>{roomTypesCheckboxes}</div>
+        </AccordionContainer>
+      </div>
+      <ul className={styles.toursList}>
+        {filteredTours.map((tour) => (
+          <ToursListItem key={tour.id} tour={tour} />
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 export default ToursList;

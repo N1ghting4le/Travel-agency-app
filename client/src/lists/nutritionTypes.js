@@ -1,24 +1,24 @@
 const nutritionTypes = [
-    {
-        value: "RO",
-        descr: "Без питания"
-    },
-    {
-        value: "BB",
-        descr: "Только завтрак"
-    },
-    {
-        value: "HB",
-        descr: "Полупансион (завтрак и ужин, напитки - платно)"
-    },
-    {
-        value: "FB",
-        descr: "Завтрак, обед, ужин (напитки - платно)"
-    },
-    {
-        value: "AI",
-        descr: "Всё включено"
-    }
+  {
+    value: "RO",
+    descr: "RO - Без питания",
+  },
+  {
+    value: "BB",
+    descr: "BB - Только завтрак",
+  },
+  {
+    value: "HB",
+    descr: "HB - Полупансион (завтрак и ужин, напитки - платно)",
+  },
+  {
+    value: "FB",
+    descr: "FB - Завтрак, обед, ужин (напитки - платно)",
+  },
+  {
+    value: "AI",
+    descr: "AI - Всё включено",
+  },
 ];
 
 export default nutritionTypes;

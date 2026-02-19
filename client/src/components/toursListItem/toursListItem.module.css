@@ -59,8 +59,16 @@
     gap: 20px;
 }
 
+.btnWrapper:has(.btn:disabled) {
+    cursor: not-allowed;
+}
+
 .link {
     width: 100%;
+}
+
+.link:has(.btn:disabled) {
+    pointer-events: none;
 }
 
 .btn {

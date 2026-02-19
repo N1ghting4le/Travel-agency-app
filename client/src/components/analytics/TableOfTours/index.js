@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useQuery from "@/hooks/query.hook";
-import { BASE_URL } from "@/env";
+import { BASE_URL } from "@/constants/queryPaths";
 import {
   useReactTable,
   getCoreRowModel,

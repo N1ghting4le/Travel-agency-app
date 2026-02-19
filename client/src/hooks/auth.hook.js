@@ -1,26 +1,29 @@
-'use client';
+"use client";
 
-import { useAdmin, useUser, useToken } from "@/components/GlobalContext";
+import { useUser } from "@/components/globalContext/hooks/useUser";
 import { useCallback } from "react";
 
+import { TOKEN_STORAGE_KEY } from "./constants";
+
 const useAuth = () => {
-    const { setUser } = useUser();
-    const { setToken } = useToken();
-    const { setAdmin } = useAdmin();
+  const { setUser } = useUser();
 
-    const authorize = useCallback(res => {
-        const { token, user } = res;
+  const authorize = useCallback(
+    (res) => {
+      const { token, user } = res;
 
-        if (user.admin) {
-            setAdmin(true);
-        }
+      setUser(user);
+      localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    },
+    [setUser],
+  );
 
-        setUser(user);
-        setToken(token);
-        localStorage.setItem("token", token);
-    }, []);
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }, [setUser]);
 
-    return authorize;
-}
+  return { authorize, logout };
+};
 
 export default useAuth;

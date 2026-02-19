@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { TextField, FormControl, FormHelperText } from "@mui/material";
 import "./input.css";
 
 export const labelStyle = {
@@ -6,22 +6,30 @@ export const labelStyle = {
 };
 
 export const helperStyle = {
-  fontSize: "16px",
+  position: "absolute",
+  top: "100%",
+  lineHeight: "normal",
 };
 
 const Input = ({ placeholder, error, multiline = false, ...props }) => (
-  <TextField
-    sx={{
-      "& .MuiInputLabel-root": labelStyle,
-      "& .Mui-error": helperStyle,
-    }}
-    fullWidth
-    label={placeholder}
-    error={!!error}
-    multiline={multiline}
-    {...props}
-    helperText={error?.message}
-  />
+  <FormControl fullWidth>
+    <TextField
+      slotProps={{
+        inputLabel: { style: labelStyle },
+      }}
+      fullWidth
+      label={placeholder}
+      error={!!error}
+      multiline={multiline}
+      rows={multiline ? 5 : undefined}
+      {...props}
+    />
+    {error && (
+      <FormHelperText sx={helperStyle} error>
+        {error.message}
+      </FormHelperText>
+    )}
+  </FormControl>
 );
 
 export default Input;

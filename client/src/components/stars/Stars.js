@@ -1,21 +1,22 @@
 import styles from "./stars.module.css";
+import { STARS } from "./constants";
 
 const Stars = ({ stars, setStars }) => {
-    const handleClick = (i) => setStars(i + 1);
+  const handleClick = (star) => () => {
+    setStars(star);
+  };
 
-    const renderStars = () => Array(5).fill().map((_, i) => (
-        <div key={i}
-            className={`${styles.star} ${i < stars ? styles.active : ''}`}
-            onClick={() => handleClick(i)}/>
-    ));
-
-    const starsEls = renderStars();
-
-    return (
-        <div className={styles.wrapper}>
-            {starsEls}
-        </div>
-    );
-}
+  return (
+    <div className={styles.wrapper}>
+      {STARS.map((star) => (
+        <div
+          key={star}
+          className={`${styles.star} ${star <= stars ? styles.active : ""}`}
+          onClick={handleClick(star)}
+        />
+      ))}
+    </div>
+  );
+};
 
 export default Stars;

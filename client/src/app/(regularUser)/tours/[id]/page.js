@@ -1,18 +1,16 @@
 import styles from "./page.module.css";
-import { BASE_URL } from "@/env";
+import { getTourByIdApiEndpoint } from "@/constants/queryPaths";
 import DisplayStars from "@/components/displayStars/DisplayStars";
 import { Divider } from "@mui/material";
 import TourReviews from "@/components/tourReviews/TourReviews";
 import AllTourPhotos from "@/components/allTourPhotos/AllTourPhotos";
 import BookTourModal from "@/components/bookTourModal/BookTourModal";
-import LocationCityIcon from "@mui/icons-material/LocationCity";
-import LanguageIcon from "@mui/icons-material/Language";
-import SurfingIcon from "@mui/icons-material/Surfing";
 import PinDropIcon from "@mui/icons-material/PinDrop";
-import { getData } from "@/app/(adminOrEmployee)/admin/edit-tour/[id]/page";
+import { getData } from "@/utils/getData";
+import { getTourInfo, getPhotoSrc } from "./utils";
 
 const TourPage = async ({ params }) => {
-  const tour = await getData(`${BASE_URL}/tour/get/${params.id}`);
+  const tour = await getData(getTourByIdApiEndpoint(params.id));
   const {
     departureCity,
     destinationCountry,
@@ -36,21 +34,17 @@ const TourPage = async ({ params }) => {
   } = hotel;
   const { resortTitle } = resort;
 
-  const tourInfoArr = [
-    [LocationCityIcon, "Город вылета:", departureCity],
-    [LanguageIcon, "Страна прибытия:", destinationCountry],
-    [SurfingIcon, "Курорт:", resortTitle],
-  ];
+  const tourInfo = getTourInfo(departureCity, destinationCountry, resortTitle);
 
   return (
     <main className={styles.main}>
       <h1>{tourTitle}</h1>
       <div className={styles.tourInfo}>
-        {tourInfoArr.map(([Icon, title, info]) => (
-          <div key={title} className={styles.tourInfoItem}>
+        {tourInfo.map(({ Icon, label, info }) => (
+          <div key={label} className={styles.tourInfoItem}>
             <div className={styles.tourInfoItemTitle}>
               <Icon style={{ color: "salmon" }} />
-              <p className={styles.bold}>{title}</p>
+              <p className={styles.bold}>{label}</p>
             </div>
             <p>{info}</p>
           </div>
@@ -85,16 +79,21 @@ const TourPage = async ({ params }) => {
           />
         </div>
         <div className={styles.photos}>
-          {photos.slice(0, 5).map((src, i) => (
+          {photos.slice(0, 5).map((name) => (
             <img
-              key={src}
-              src={`${BASE_URL}/uploads/${destinationCountry}/${resortTitle}/${hotelTitle}/${src}`}
-              alt={`hotel photo ${i + 1}`}
+              key={name}
+              src={getPhotoSrc(
+                destinationCountry,
+                resortTitle,
+                hotelTitle,
+                name,
+              )}
+              alt={name}
               className={styles.photo}
             />
           ))}
           <AllTourPhotos
-            baseSrc={`${BASE_URL}/uploads/${destinationCountry}/${resortTitle}/${hotelTitle}`}
+            baseSrc={getPhotoSrc(destinationCountry, resortTitle, hotelTitle)}
             photos={photos}
             title={hotelTitle}
           />

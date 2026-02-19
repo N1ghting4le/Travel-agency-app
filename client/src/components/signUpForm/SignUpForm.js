@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./signUpForm.module.css";
-import { BASE_URL } from "@/env";
+import { SIGN_UP_API_ENDPOINT } from "@/constants/queryPaths";
 import { Controller } from "react-hook-form";
 import Input from "../input/Input";
 import PasswordInput from "../passwordInput/PasswordInput";
@@ -9,7 +9,7 @@ import UserSpinner from "../loadingSpinners/UserSpinner";
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { useToken, useAdmin } from "../GlobalContext";
+import { useAdmin } from "../globalContext/hooks/useAdmin";
 import schema from "./schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import useQuery from "@/hooks/query.hook";
@@ -20,8 +20,7 @@ import fields from "./fields";
 const SignUpForm = () => {
   const pathname = usePathname();
   const { isAdmin } = useAdmin();
-  const { token } = useToken();
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const router = useRouter();
   const authorize = useAuth();
 
@@ -35,21 +34,26 @@ const SignUpForm = () => {
 
   const { query, queryState, resetQueryState } = useQuery();
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     const { confirmPassword, ...body } = data;
-    const headers = { "Content-type": "application/json" };
 
-    if (isAdmin) headers.authorization = `Bearer ${token}`;
+    try {
+      const res = await query(SIGN_UP_API_ENDPOINT, {
+        method: "POST",
+        json: true,
+        body: JSON.stringify(body),
+        authorize: isAdmin,
+      });
 
-    query(`${BASE_URL}/user/signUp`, "POST", headers, JSON.stringify(body))
-      .then((res) => {
-        if (!isAdmin) {
-          authorize(res);
-          router.back();
-        }
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setTimeout(resetQueryState, 2000));
+      if (!isAdmin) {
+        authorize(res);
+        router.back();
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTimeout(resetQueryState, 2000);
+    }
   };
 
   const renderFields = (arr, Input) =>

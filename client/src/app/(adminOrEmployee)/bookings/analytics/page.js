@@ -1,5 +1,5 @@
-import { getData } from "../../admin/edit-tour/[id]/page";
-import { BASE_URL } from "@/env";
+import { getData } from "@/utils/getData";
+import { BASE_URL } from "@/constants/queryPaths";
 import { Analytics } from "@/components/analytics";
 
 import styles from "./page.module.css";

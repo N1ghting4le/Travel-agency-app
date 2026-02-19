@@ -8,7 +8,7 @@
 .textFieldsWrapper {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 30px;
 }
 
 .starsWrapper {
@@ -21,6 +21,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    position: relative;
 }
 
 .submitWrapper {

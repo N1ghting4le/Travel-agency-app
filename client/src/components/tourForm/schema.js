@@ -3,14 +3,10 @@ import textFields from "./textFields";
 
 const schema = object().shape({
   ...Object.fromEntries(
-    textFields.map((field) => {
-      const { name, error } = field;
-
-      return [
-        name,
-        error ? string().trim().required(error) : string().trim().notRequired(),
-      ];
-    })
+    textFields.map(({ name, error }) => [
+      name,
+      error ? string().trim().required(error) : string().trim().notRequired(),
+    ]),
   ),
   departureCity: string().required("Вы не выбрали город"),
   destinationCountry: string().required("Вы не выбрали страну"),

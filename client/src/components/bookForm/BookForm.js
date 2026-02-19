@@ -1,36 +1,32 @@
 "use client";
 
 import styles from "./bookForm.module.css";
-import dayjs from "dayjs";
-import { BASE_URL } from "@/env";
+import { CREATE_BOOKING_API_ENDPOINT } from "@/constants/queryPaths";
 import { Controller } from "react-hook-form";
 import Input from "../input/Input";
 import SelectMenu from "../selectMenu/SelectMenu";
+import FormDatePicker from "../formDatePicker/FormDatePicker";
 import UserSpinner from "../loadingSpinners/UserSpinner";
 import SubmitWrapper from "../submitWrapper/SubmitWrapper";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Restaurant, KingBed } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { useToken } from "../GlobalContext";
 import schema from "./schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import useQuery from "@/hooks/query.hook";
 import nutritionTypes from "@/lists/nutritionTypes";
 import roomTypes from "@/lists/roomTypes";
 import { ruRU } from "@mui/x-date-pickers/locales";
+import {
+  minStartDate,
+  maxStartDate,
+  defaultEndDate,
+  amounts,
+} from "./constants";
+import { calculateTotalPrice } from "./utils";
 import "dayjs/locale/ru";
-
-const today = dayjs();
-const minStartDate = today.add(1, "week");
-const maxStartDate = today.add(3, "month");
-const defaultEndDate = minStartDate.add(1, "week");
-
-const amounts = [
-  ["Кол-во взрослых", "adultsAmount"],
-  ["Кол-во детей", "childrenAmount"],
-];
 
 const BookForm = ({
   id,
@@ -40,151 +36,88 @@ const BookForm = ({
   setCanClose,
   handleClose,
 }) => {
-  const [totalPrice, setTotalPrice] = useState(basePrice);
-  const { token } = useToken();
-  const [errorMsg, setErrorMsg] = useState("");
-  const [booking, setBooking] = useState({
-    roomType: 0,
-    nutrType: 0,
-    adultsAmount: 1,
-    childrenAmount: 0,
-    startDate: minStartDate,
-    endDate: defaultEndDate,
-  });
+  const [errorMsg, setErrorMsg] = useState(null);
 
   const {
     control,
     handleSubmit,
     formState: { errors, isValid },
     watch,
+    setValue,
     trigger,
   } = useForm({
     resolver: yupResolver(schema),
     mode: "onChange",
     defaultValues: {
-      roomType: "",
-      nutrType: "",
+      startDate: minStartDate,
+      endDate: defaultEndDate,
+      roomType: null,
+      nutrType: null,
       adultsAmount: 1,
       childrenAmount: 0,
     },
   });
 
   const { query, queryState, resetQueryState } = useQuery();
-  const roomType = watch("roomType");
-  const nutrType = watch("nutrType");
-  const adultsAmount = watch("adultsAmount");
+  const formValues = watch();
 
-  const setType = (type, arr, val) => {
-    setBooking((booking) => ({
-      ...booking,
-      [type]: val ? arr.indexOf(val.split(" ")[0]) + 1 : 0,
-    }));
-  };
+  const totalPrice = useMemo(() => {
+    if (!isValid) {
+      return null;
+    }
 
-  useEffect(() => {
-    setType("nutrType", nutrTypes, nutrType);
-  }, [nutrType]);
-
-  useEffect(() => {
-    setType("roomType", rts, roomType);
-  }, [roomType]);
-
-  useEffect(() => {
-    trigger("adultsAmount");
-  }, [adultsAmount, roomType]);
-
-  useEffect(() => {
-    if (!isValid) return;
-
-    const {
-      roomType,
-      nutrType,
-      adultsAmount,
-      childrenAmount,
-      startDate,
-      endDate,
-    } = booking;
-    const dayDiff = endDate.diff(startDate, "day");
-
-    setTotalPrice(
-      +(
-        basePrice *
-        dayDiff *
-        (dayDiff === 1 ? 1 : 0.9) *
-        roomType *
-        (roomType === 1 ? 1 : 0.75) *
-        nutrType *
-        (nutrType === 1 ? 1 : 0.8) *
-        adultsAmount *
-        (adultsAmount === 1 ? 1 : 0.85) *
-        (childrenAmount + 1) *
-        (childrenAmount ? 0.7 : 1)
-      ).toFixed(2)
+    return Number(
+      calculateTotalPrice(rts, nutrTypes, basePrice, formValues).toFixed(2),
     );
-  }, [booking, isValid]);
+  }, [isValid, rts, nutrTypes, basePrice, formValues]);
 
   const changeStartDate = (startDate) => {
-    setBooking((booking) => ({
-      ...booking,
-      startDate,
-      endDate: startDate.add(1, "week"),
-    }));
+    setValue("startDate", startDate, { shouldValidate: true });
+    trigger("endDate");
   };
 
   const changeEndDate = (endDate) => {
-    setBooking((booking) => ({ ...booking, endDate }));
+    setValue("endDate", endDate, { shouldValidate: true });
   };
 
-  const onSubmit = (data) => {
+  const changeRoomType = () => {
+    trigger("adultsAmount");
+  };
+
+  const onSubmit = async ({ nutrType, roomType, ...data }) => {
     setCanClose(false);
 
     const body = {
       tourId: id,
-      startDate: booking.startDate.toDate(),
-      endDate: booking.endDate.toDate(),
       totalPrice,
+      nutrType: nutrType.value,
+      roomType: roomType.value,
       ...data,
     };
 
-    query(
-      `${BASE_URL}/booking/create`,
-      "POST",
-      { "Content-type": "application/json", authorization: `Bearer ${token}` },
-      JSON.stringify(body)
-    )
-      .then(() => setTimeout(handleClose, 2000))
-      .catch((err) => {
-        setErrorMsg(err.message);
-        setTimeout(resetQueryState, 2000);
-      })
-      .finally(() => setCanClose(true));
+    try {
+      await query(CREATE_BOOKING_API_ENDPOINT, {
+        method: "POST",
+        body: JSON.stringify(body),
+        json: true,
+      });
+      setTimeout(handleClose, 2000);
+    } catch (err) {
+      setErrorMsg(err.message);
+      setTimeout(resetQueryState, 2000);
+    } finally {
+      setCanClose(true);
+    }
   };
 
-  const renderInputs = () =>
-    amounts.map(([text, name]) => (
-      <Controller
-        key={name}
-        name={name}
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <Input
-            placeholder={text}
-            value={value}
-            error={errors[name]}
-            onChange={(e) => {
-              onChange(e);
-              setBooking((booking) => ({
-                ...booking,
-                [name]: +e.target.value,
-              }));
-            }}
-            type="number"
-          />
-        )}
-      />
-    ));
-
-  const inputs = renderInputs();
+  const roomTypeOptions = rts.map((item) =>
+    roomTypes.find((t) => t.value === item),
+  );
+  const nutrTypeOptions = nutrTypes.map((item) =>
+    nutritionTypes.find((t) => t.value === item),
+  );
+  const minEndDate = (formValues.startDate ?? minStartDate).add(1, "day");
+  const maxEndDate = (formValues.startDate ?? maxStartDate).add(1, "month");
 
   return (
     <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
@@ -198,30 +131,33 @@ const BookForm = ({
         >
           <div className={styles.calendarWrapper}>
             <p>Дата начала:</p>
-            <DatePicker
-              value={booking.startDate}
+            <FormDatePicker
+              name="startDate"
+              value={formValues.startDate}
               minDate={minStartDate}
               maxDate={maxStartDate}
+              error={errors.startDate}
               onChange={changeStartDate}
             />
           </div>
           <div className={styles.calendarWrapper}>
             <p>Дата окончания:</p>
-            <DatePicker
-              value={booking.endDate}
-              minDate={booking.startDate.add(1, "day")}
-              maxDate={booking.startDate.add(1, "month")}
+            <FormDatePicker
+              name="endDate"
+              value={formValues.endDate}
+              minDate={minEndDate}
+              maxDate={maxEndDate}
+              error={errors.endDate}
               onChange={changeEndDate}
             />
           </div>
           <SelectMenu
             name="roomType"
             control={control}
-            values={rts.map(
-              (item) =>
-                `${item} - ${roomTypes.find((t) => t.value === item).descr}`
-            )}
+            values={roomTypeOptions}
+            valueField="descr"
             error={errors.roomType}
+            onChange={changeRoomType}
           >
             <div style={{ display: "flex", gap: "5px" }}>
               <KingBed fontSize="small" />
@@ -231,12 +167,8 @@ const BookForm = ({
           <SelectMenu
             name="nutrType"
             control={control}
-            values={nutrTypes.map(
-              (item) =>
-                `${item} - ${
-                  nutritionTypes.find((t) => t.value === item).descr
-                }`
-            )}
+            values={nutrTypeOptions}
+            valueField="descr"
             error={errors.nutrType}
           >
             <div style={{ display: "flex", gap: "5px" }}>
@@ -244,7 +176,22 @@ const BookForm = ({
               <p>Тип питания</p>
             </div>
           </SelectMenu>
-          {inputs}
+          {amounts.map(({ text, name }) => (
+            <Controller
+              key={name}
+              name={name}
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <Input
+                  placeholder={text}
+                  value={value}
+                  error={errors[name]}
+                  onChange={onChange}
+                  type="number"
+                />
+              )}
+            />
+          ))}
         </LocalizationProvider>
       </div>
       {isValid && (

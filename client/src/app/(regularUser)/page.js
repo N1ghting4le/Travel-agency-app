@@ -8,12 +8,19 @@ export default function Home() {
     <main className={styles.main}>
       <div className={`${styles.bg} ${styles.bgGradient}`}>
         <div className={styles.sloganWrapper}>
-          <p className={styles.slogan}>Загадайте своё путешествие, мы сделаем остальное</p>
+          <p className={styles.slogan}>
+            Загадайте своё путешествие, мы сделаем остальное
+          </p>
           <p className={styles.subSlogan}>Ну очень крутая компания</p>
         </div>
       </div>
-      <Image src={bg} alt="background" className={`${styles.bg} ${styles.bgImage}`} priority/>
-      <TourWrapper/>
+      <Image
+        src={bg}
+        alt="background"
+        className={`${styles.bg} ${styles.bgImage}`}
+        priority
+      />
+      <TourWrapper />
     </main>
   );
 }

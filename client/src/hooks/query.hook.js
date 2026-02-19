@@ -1,35 +1,69 @@
-'use client';
+"use client";
 
 import { useState, useCallback } from "react";
 
+import { IDLE, PENDING, ERROR, FULFILLED } from "@/constants/queryStates";
+import { TOKEN_STORAGE_KEY, defaultQuerySettings } from "./constants";
+
 const useQuery = () => {
-    const [queryState, setQueryState] = useState('idle');
+  const [queryState, setQueryState] = useState(IDLE);
 
-    const query = useCallback((url, method = 'GET', headers = {}, body = null) => {
-        return new Promise(async (resolve, reject) => {
-            setQueryState('pending');
+  const query = useCallback(async (url, settings) => {
+    const { method, body, json, authorize } = {
+      ...defaultQuerySettings,
+      ...(settings ?? {}),
+    };
+    const headers = {};
 
-            try {
-                const res = await fetch(url, { method, headers, body }),
-                data = await (res.headers.get('Content-type')?.includes("json") ? res.json() : res.text());
+    setQueryState(PENDING);
 
-                if (!res.ok) {
-                    throw new Error(data);
-                }
+    if (authorize) {
+      const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
-                setQueryState('fulfilled');
-                resolve(data);
-            } catch (e) {
-                setQueryState('error');
-                reject(e.message === "Failed to fetch" ? new Error("Произошла ошибка") : e);
-                console.error(e);
-            }
-        });
-    }, []);
+      if (token) {
+        headers.authorization = `Bearer ${token}`;
+      }
+    }
 
-    const resetQueryState = useCallback(() => setQueryState('idle'), []);
+    if (json) {
+      headers["Content-type"] = "application/json";
+    }
 
-    return { query, queryState, resetQueryState };
-}
+    try {
+      const res = await fetch(url, { method, headers, body });
+      const contentTypeHeader = res.headers.get("Content-type");
+      const data = contentTypeHeader?.includes("json")
+        ? await res.json()
+        : await res.text();
+
+      if (!res.ok) {
+        throw new Error(data);
+      }
+
+      setQueryState(FULFILLED);
+      return data;
+    } catch (e) {
+      setQueryState(ERROR);
+      throw e;
+    }
+  }, []);
+
+  const resetQueryState = useCallback(() => setQueryState(IDLE), []);
+
+  const isLoading = queryState === PENDING;
+  const isError = queryState === ERROR;
+  const isSuccess = queryState === FULFILLED;
+  const isIdle = queryState === IDLE;
+
+  return {
+    query,
+    queryState,
+    isIdle,
+    isLoading,
+    isError,
+    isSuccess,
+    resetQueryState,
+  };
+};
 
 export default useQuery;

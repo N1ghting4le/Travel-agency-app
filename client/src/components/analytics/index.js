@@ -1,6 +1,6 @@
 "use client";
 
-import { BASE_URL } from "@/env";
+import { BASE_URL } from "@/constants/queryPaths";
 import useQuery from "@/hooks/query.hook";
 import { useState } from "react";
 import { Autocomplete, TextField } from "@mui/material";

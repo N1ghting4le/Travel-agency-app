@@ -27,9 +27,6 @@ COPY . .
 # Step 7. Optional, disables Nextjs telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
-ARG NEXT_PUBLIC_BASE_URL
-ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
-
 # Step 8. Build Next.js based on the preferred package manager
 RUN \
   if [ -f yarn.lock ]; then yarn build; \

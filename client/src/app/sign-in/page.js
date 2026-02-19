@@ -6,24 +6,32 @@ import Link from "next/link";
 import picture from "../../public/signup_image.jpg";
 
 export const metadata = {
-    title: "Вход"
+  title: "Вход",
 };
 
-const SignInPage = () => {
-    return (
-        <main className={styles.main}>
-            <div className={styles.container}>
-                <Link href="/"><Logo/></Link>
-                <h1>Вход</h1>
-                <SignInForm/>
-                <p style={{alignSelf: "center"}}>
-                    Нет аккаунта?
-                    <Link href="/sign-up" style={{color: "salmon"}} replace> Регистрация</Link>
-                </p>
-            </div>
-            <Image src={picture} alt="sign up picture" className={styles.picture} priority/>
-        </main>
-    );
-}
+const SignInPage = () => (
+  <main className={styles.main}>
+    <div className={styles.container}>
+      <Link href="/">
+        <Logo />
+      </Link>
+      <h1>Вход</h1>
+      <SignInForm />
+      <p style={{ alignSelf: "center" }}>
+        Нет аккаунта?
+        <Link href="/sign-up" style={{ color: "salmon" }} replace>
+          {" "}
+          Регистрация
+        </Link>
+      </p>
+    </div>
+    <Image
+      src={picture}
+      alt="sign up picture"
+      className={styles.picture}
+      priority
+    />
+  </main>
+);
 
 export default SignInPage;
