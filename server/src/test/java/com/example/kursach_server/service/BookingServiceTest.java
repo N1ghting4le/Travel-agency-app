@@ -1,7 +1,7 @@
 package com.example.kursach_server.service;
 
-import com.example.kursach_server.dto.booking.BookingDTO;
-import com.example.kursach_server.dto.booking.BookingWithUserInfoDTO;
+import com.example.kursach_server.dto.booking.BookingResponseDTO;
+import com.example.kursach_server.dto.booking.BookingWithUserInfoResponseDTO;
 import com.example.kursach_server.dto.booking.CreateBookingDTO;
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
@@ -33,9 +33,9 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @Transactional
 public class BookingServiceTest {
-
     @Container
-    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16-alpine")
+    public static PostgreSQLContainer<?> postgreSQLContainer =
+        new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("testdb")
             .withUsername("testuser")
             .withPassword("testpass");
@@ -201,7 +201,7 @@ public class BookingServiceTest {
 
     @Test
     void getUserBookings_ShouldReturnUserBookings() {
-        List<BookingDTO> result = bookingService.getUserBookings(testUser.getId());
+        List<BookingResponseDTO> result = bookingService.getUserBookings(testUser.getId());
 
         assertEquals(1, result.size());
         assertEquals(testTour.getId(), result.get(0).getTourId());
@@ -213,7 +213,10 @@ public class BookingServiceTest {
         dateRange.setStartDate(new Date(System.currentTimeMillis()));
         dateRange.setEndDate(new Date(System.currentTimeMillis() + 259200000)); // +3 дня
 
-        List<BookingWithUserInfoDTO> result = bookingService.getBookingsInDateRange(dateRange);
+        List<BookingWithUserInfoResponseDTO> result = bookingService.getBookingsInDateRange(
+                dateRange.getStartDate(),
+                dateRange.getEndDate()
+        );
 
         assertEquals(1, result.size());
         assertEquals(testUser.getId(), result.get(0).getUserInfo().getId());

@@ -6,10 +6,11 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class ResortIdAndTitleDTO {
-    private UUID id;
-    private String resortTitle;
-    public ResortIdAndTitleDTO(Resort resort) {
+public class ResortLookupDTO {
+    private final UUID id;
+    private final String resortTitle;
+
+    public ResortLookupDTO(Resort resort) {
         id = resort.getId();
         resortTitle = resort.getResortTitle();
     }

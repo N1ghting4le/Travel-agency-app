@@ -2,6 +2,7 @@ package com.example.kursach_server.models;
 
 import static jakarta.persistence.GenerationType.UUID;
 
+import com.example.kursach_server.constants.BookingStatuses;
 import com.example.kursach_server.dto.booking.CreateBookingDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -64,6 +65,7 @@ public class Booking {
 
     @Column(nullable = false, columnDefinition = "text")
     private String status;
+
     public Booking() {}
     public Booking(CreateBookingDTO createBookingDTO) {
         startDate = createBookingDTO.getStartDate();
@@ -74,6 +76,6 @@ public class Booking {
         adultsAmount = createBookingDTO.getAdultsAmount();
         childrenAmount = createBookingDTO.getChildrenAmount();
         bookingDate = new Date();
-        status = "На рассмотрении";
+        status = BookingStatuses.UNDER_CONSIDERATION;
     }
 }

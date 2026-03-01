@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import useQuery from "@/hooks/query.hook";
-import { BASE_URL } from "@/constants/queryPaths";
+import { getTourStatsApiEndpoint } from "@/constants/queryPaths";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { getQueryParams } from "@/utils/getQueryParams";
 
 import styles from "./styles.module.css";
+import { set } from "react-hook-form";
 
 const pageSize = 25;
 
@@ -53,19 +55,15 @@ export function TableOfTours({ year, month, country }) {
   const { query } = useQuery();
 
   useEffect(() => {
-    let params = `year=${year}`;
+    const params = getQueryParams({
+      year,
+      month,
+      country,
+      page,
+      pageSize,
+    });
 
-    if (month !== null) {
-      params += `&month=${month}`;
-    }
-
-    if (country) {
-      params += `&country=${country}`;
-    }
-
-    params += `&page=${page}&pageSize=${pageSize}`;
-
-    query(`${BASE_URL}/booking/tours?${params}`).then((res) => {
+    query(getTourStatsApiEndpoint(params)).then((res) => {
       const {
         content,
         pageable: { offset },
@@ -84,13 +82,21 @@ export function TableOfTours({ year, month, country }) {
         numberOfElements,
       });
     });
-  }, [year, month, country, page]);
+  }, [year, month, country, page, query]);
 
   const table = useReactTable({
     data: tours,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const handleNextPage = () => {
+    setPage((prevPage) => prevPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    setPage((prevPage) => prevPage - 1);
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -107,7 +113,7 @@ export function TableOfTours({ year, month, country }) {
                   >
                     {flexRender(
                       header.column.columnDef.header,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </th>
                 ))}
@@ -129,7 +135,7 @@ export function TableOfTours({ year, month, country }) {
       </div>
       <div className={styles.pagination}>
         <button
-          onClick={() => setPage((page) => page - 1)}
+          onClick={handlePrevPage}
           disabled={page === 0}
           className={styles.btn}
         >
@@ -139,7 +145,7 @@ export function TableOfTours({ year, month, country }) {
           {page + 1} из {pagination.totalPages}
         </span>
         <button
-          onClick={() => setPage((page) => page + 1)}
+          onClick={handleNextPage}
           disabled={page === pagination.totalPages - 1}
           className={styles.btn}
         >

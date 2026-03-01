@@ -8,21 +8,22 @@ import java.util.Date;
 import java.util.UUID;
 
 @Getter
-public class BookingDTO {
-    private UUID id;
-    private UUID tourId;
-    private String tourTitle;
-    private String nutritionType;
-    private String roomType;
-    private int adultsAmount;
-    private int childrenAmount;
-    private Date startDate;
-    private Date endDate;
-    private Date bookingDate;
-    private String hotelTitle;
-    private double totalPrice;
-    private String status;
-    public BookingDTO(Booking booking) {
+public class BookingResponseDTO {
+    private final UUID id;
+    private final UUID tourId;
+    private final String tourTitle;
+    private final String nutritionType;
+    private final String roomType;
+    private final int adultsAmount;
+    private final int childrenAmount;
+    private final Date startDate;
+    private final Date endDate;
+    private final Date bookingDate;
+    private final String hotelTitle;
+    private final double totalPrice;
+    private final String status;
+
+    public BookingResponseDTO(Booking booking) {
         Tour tour = booking.getTour();
 
         id = booking.getId();

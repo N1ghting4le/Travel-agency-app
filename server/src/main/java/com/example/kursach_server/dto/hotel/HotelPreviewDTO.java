@@ -7,13 +7,14 @@ import java.util.UUID;
 
 @Getter
 public class HotelPreviewDTO {
-    private UUID id;
-    private String hotelTitle;
-    private String resort;
-    private String photo;
-    private String[] nutritionTypes;
-    private String[] roomTypes;
-    private int stars;
+    private final UUID id;
+    private final String hotelTitle;
+    private final String resort;
+    private final String photo;
+    private final String[] nutritionTypes;
+    private final String[] roomTypes;
+    private final int stars;
+
     public HotelPreviewDTO(Hotel hotel) {
         id = hotel.getId();
         hotelTitle = hotel.getHotelTitle();

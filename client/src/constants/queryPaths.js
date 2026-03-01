@@ -41,3 +41,13 @@ export const UPDATE_TOUR_API_ENDPOINT = `${BASE_URL}/tour/update`;
 export const GET_TOURS_API_ENDPOINT = `${BASE_URL}/tour/getTours`;
 
 export const deleteTourApiEndpoint = (id) => `${BASE_URL}/tour/delete/${id}`;
+
+export const getBookingCostsApiEndpoint = (params) =>
+  `${BASE_URL}/booking/charts/costs?${params}`;
+export const getBookingAmountsApiEndpoint = (params) =>
+  `${BASE_URL}/booking/charts/amounts?${params}`;
+export const getBookingSummaryApiEndpoint = (params) =>
+  `${BASE_URL}/booking/summary?${params}`;
+
+export const getTourStatsApiEndpoint = (params) =>
+  `${BASE_URL}/tour/stats?${params}`;

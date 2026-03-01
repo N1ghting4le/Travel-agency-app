@@ -40,6 +40,7 @@ public class Review {
 
     @Column(nullable = false, columnDefinition = "text")
     private String reviewText;
+
     public Review() {}
     public Review(CreateReviewDTO createReviewDTO) {
         mark = createReviewDTO.getMark();

@@ -46,8 +46,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Booking> bookings = new ArrayList<>();
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
     List<Booking> takenBookings = new ArrayList<>();
+
     public User() {}
     public User(CreateUserDTO createUserDTO, String userRole) {
         email = createUserDTO.getEmail();

@@ -10,21 +10,22 @@ import java.util.UUID;
 
 @Getter
 public class TourPreviewDTO {
-    private UUID id;
-    private String tourTitle;
-    private double basePrice;
-    private String destinationCountry;
-    private HotelPreviewDTO hotel;
-    private double avgMark;
-    private int amount;
+    private final UUID id;
+    private final String tourTitle;
+    private final double basePrice;
+    private final String destinationCountry;
+    private final HotelPreviewDTO hotel;
+    private final double avgMark;
+    private final int amount;
+
     public TourPreviewDTO(Tour tour) {
+        OptionalDouble avg = tour.getReviews().stream().mapToInt(Review::getMark).average();
+
         id = tour.getId();
         tourTitle = tour.getTourTitle();
         basePrice = tour.getBasePrice();
         destinationCountry = tour.getDestinationCountry();
         hotel = new HotelPreviewDTO(tour.getHotel());
-
-        OptionalDouble avg = tour.getReviews().stream().mapToInt(Review::getMark).average();
         avgMark = avg.isPresent() ? avg.getAsDouble() : 0;
         amount = tour.getReviews().size();
     }

@@ -1,47 +1,49 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.constants.Roles;
 import com.example.kursach_server.dto.user.CreateUserDTO;
 import com.example.kursach_server.requests.SignInRequest;
-import com.example.kursach_server.dto.user.UserWithTokenDTO;
-import com.example.kursach_server.exceptions.IncorrectPasswordException;
+import com.example.kursach_server.dto.user.UserWithTokenResponseDTO;
+import com.example.kursach_server.exceptions.forbidden.IncorrectPasswordException;
 import com.example.kursach_server.exceptions.conflict.EntityAlreadyExistsException;
 import com.example.kursach_server.exceptions.notFound.UserNotExistsException;
 import com.example.kursach_server.models.User;
 import com.example.kursach_server.repository.UserRepository;
 import com.example.kursach_server.jwt.JwtTokenUtil;
+import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.Objects;
 
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Value("${admin.email}")
-    private String adminEmail;
-    private PasswordEncoder passwordEncoder;
-    private String adminPassword;
+    private final UserRepository userRepository;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final PasswordEncoder passwordEncoder;
+    private final String adminEmail;
+    private final String adminPassword;
 
     public UserService(
-            @Autowired PasswordEncoder passwordEncoder, @Value("${admin.password}") String adminPassword) {
+        UserRepository userRepository,
+        JwtTokenUtil jwtTokenUtil,
+        PasswordEncoder passwordEncoder,
+        @Value("${admin.email}") String adminEmail,
+        @Value("${admin.password}") String adminPassword
+    ) {
+        this.userRepository = userRepository;
+        this.jwtTokenUtil = jwtTokenUtil;
         this.passwordEncoder = passwordEncoder;
+        this.adminEmail = adminEmail;
         this.adminPassword = passwordEncoder.encode(adminPassword);
     }
 
-    public boolean isAdminEmail(Object email) {
-        return Objects.equals(email, adminEmail);
-    }
-    public UserWithTokenDTO createUser(CreateUserDTO createUserDTO, HttpServletRequest request)
-            throws EntityAlreadyExistsException {
+    public UserWithTokenResponseDTO createUser(CreateUserDTO createUserDTO, HttpServletRequest request)
+        throws EntityAlreadyExistsException {
         String email = createUserDTO.getEmail();
-        String role = isAdminEmail(request.getAttribute("email")) ? "EMPL" : "USER";
+        String role = isAdminEmail(Utils.getUserEmail(request)) ? Roles.EMPLOYEE : Roles.USER;
 
         if (isAdminEmail(email) || userRepository.existsByEmail(email)) {
             throw new EntityAlreadyExistsException("Пользователь с этим адресом эл. почты уже существует");
@@ -56,11 +58,11 @@ public class UserService {
         User user = new User(createUserDTO, role);
         userRepository.save(user);
 
-        return new UserWithTokenDTO(jwtTokenUtil.generateToken(email, "ROLE_" + role), user);
+        return new UserWithTokenResponseDTO(jwtTokenUtil.generateToken(email, role), user);
     }
 
-    public UserWithTokenDTO getUser(SignInRequest signInRequest)
-            throws UserNotExistsException, IncorrectPasswordException {
+    public UserWithTokenResponseDTO getUser(SignInRequest signInRequest)
+        throws UserNotExistsException, IncorrectPasswordException {
         String phoneOrEmail = signInRequest.getPhoneOrEmail();
         String password = signInRequest.getPassword();
 
@@ -69,29 +71,33 @@ public class UserService {
                 throw new IncorrectPasswordException("Неверный пароль");
             }
 
-            return new UserWithTokenDTO(jwtTokenUtil.generateToken(phoneOrEmail, "ROLE_ADMIN"));
+            return new UserWithTokenResponseDTO(jwtTokenUtil.generateToken(phoneOrEmail, Roles.ADMIN));
         }
 
         User user = userRepository.findByPhoneNumberOrEmail(phoneOrEmail, phoneOrEmail)
-                .orElseThrow(() -> new UserNotExistsException("Пользователя не существует"));
+            .orElseThrow(() -> new UserNotExistsException("Пользователя не существует"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IncorrectPasswordException("Неверный пароль");
         }
 
-        return new UserWithTokenDTO(jwtTokenUtil.generateToken(user.getEmail(), "ROLE_" + user.getRole()), user);
+        return new UserWithTokenResponseDTO(jwtTokenUtil.generateToken(user.getEmail(), user.getRole()), user);
     }
 
-    public UserWithTokenDTO authorize(HttpServletRequest request) throws UserNotExistsException {
-        String email = (String) request.getAttribute("email");
+    public UserWithTokenResponseDTO authorize(HttpServletRequest request) throws UserNotExistsException {
+        String email = Utils.getUserEmail(request);
 
         if (isAdminEmail(email)) {
-            return new UserWithTokenDTO(jwtTokenUtil.generateToken(email, "ROLE_ADMIN"));
+            return new UserWithTokenResponseDTO(jwtTokenUtil.generateToken(email, Roles.ADMIN));
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotExistsException("Пользователя не существует"));
+            .orElseThrow(() -> new UserNotExistsException("Пользователя не существует"));
 
-        return new UserWithTokenDTO(jwtTokenUtil.generateToken(email, "ROLE_" + user.getRole()), user);
+        return new UserWithTokenResponseDTO(jwtTokenUtil.generateToken(email, user.getRole()), user);
+    }
+
+    private boolean isAdminEmail(Object email) {
+        return Objects.equals(email, adminEmail);
     }
 }

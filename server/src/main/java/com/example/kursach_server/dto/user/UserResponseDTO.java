@@ -6,15 +6,16 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class UserDTO {
+public class UserResponseDTO {
     private UUID id;
     private String name;
     private String surname;
     private String email;
     private String phoneNumber;
     private String role;
-    private boolean isAdmin;
-    public UserDTO(User user) {
+    private final boolean isAdmin;
+
+    public UserResponseDTO(User user) {
         id = user.getId();
         name = user.getName();
         surname = user.getSurname();
@@ -23,7 +24,8 @@ public class UserDTO {
         role = user.getRole();
         isAdmin = false;
     }
-    public UserDTO() {
+
+    public UserResponseDTO() {
         isAdmin = true;
     }
 }

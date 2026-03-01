@@ -7,16 +7,17 @@ import lombok.Getter;
 import java.util.UUID;
 
 @Getter
-public class TourDTO {
-    private UUID id;
-    private String tourTitle;
-    private String tourDescr;
-    private String tourNotes;
-    private String departureCity;
-    private String destinationCountry;
-    private double basePrice;
-    private Hotel hotel;
-    public TourDTO (Tour tour) {
+public class TourResponseDTO {
+    private final UUID id;
+    private final String tourTitle;
+    private final String tourDescr;
+    private final String tourNotes;
+    private final String departureCity;
+    private final String destinationCountry;
+    private final double basePrice;
+    private final Hotel hotel;
+
+    public TourResponseDTO(Tour tour) {
         id = tour.getId();
         tourTitle = tour.getTourTitle();
         tourDescr = tour.getTourDescr();

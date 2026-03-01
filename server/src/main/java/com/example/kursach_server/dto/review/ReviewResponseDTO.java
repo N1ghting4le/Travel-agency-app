@@ -8,15 +8,16 @@ import java.util.Date;
 import java.util.UUID;
 
 @Getter
-public class ReviewDTO {
-    private UUID id;
-    private UUID userId;
-    private String name;
-    private String surname;
-    private int mark;
-    private String reviewText;
-    private Date reviewDate;
-    public ReviewDTO(Review review) {
+public class ReviewResponseDTO {
+    private final UUID id;
+    private final UUID userId;
+    private final String name;
+    private final String surname;
+    private final int mark;
+    private final String reviewText;
+    private final Date reviewDate;
+
+    public ReviewResponseDTO(Review review) {
         User user = review.getUser();
 
         id = review.getId();

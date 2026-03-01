@@ -1,32 +1,41 @@
 package com.example.kursach_server.service;
 
-import com.example.kursach_server.exceptions.conflict.ResortAlreadyExistsException;
+import com.example.kursach_server.exceptions.conflict.EntityAlreadyExistsException;
 import com.example.kursach_server.models.Resort;
 import com.example.kursach_server.dto.resort.CreateResortDTO;
-import com.example.kursach_server.dto.resort.ResortIdAndTitleDTO;
+import com.example.kursach_server.dto.resort.ResortLookupDTO;
 import com.example.kursach_server.repository.ResortRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ResortService {
-    @Autowired
-    private ResortRepository resortRepository;
-    public List<ResortIdAndTitleDTO> getResortsByCountry(String country) {
-        return resortRepository.findByResortCountry(country).stream().map(ResortIdAndTitleDTO::new).toList();
+    private final ResortRepository resortRepository;
+
+    public ResortService(ResortRepository resortRepository) {
+        this.resortRepository = resortRepository;
     }
-    public void createResort(CreateResortDTO createResortDTO) throws ResortAlreadyExistsException {
+
+    public List<ResortLookupDTO> getResortsByCountry(String country) {
+        return resortRepository.findByResortCountry(country).stream().map(ResortLookupDTO::new).toList();
+    }
+
+    public UUID createResort(CreateResortDTO createResortDTO) throws EntityAlreadyExistsException {
         Optional<Resort> resortInfo = resortRepository.findByResortTitleAndResortCountry(
-                createResortDTO.getResort(), createResortDTO.getCountry());
+            createResortDTO.getResort(),
+            createResortDTO.getCountry()
+        );
 
         if (resortInfo.isPresent()) {
-            throw new ResortAlreadyExistsException("Курорт уже существует");
+            throw new EntityAlreadyExistsException("Курорт уже существует");
         }
 
         Resort resort = new Resort(createResortDTO);
         resortRepository.save(resort);
+
+        return resort.getId();
     }
 }

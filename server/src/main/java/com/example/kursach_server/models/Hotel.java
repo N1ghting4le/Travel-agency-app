@@ -3,7 +3,7 @@ package com.example.kursach_server.models;
 import static jakarta.persistence.GenerationType.UUID;
 
 import com.example.kursach_server.dto.hotel.CreateHotelDTO;
-import com.vladmihalcea.hibernate.type.array.StringArrayType;
+import io.hypersistence.utils.hibernate.type.array.StringArrayType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -38,18 +38,18 @@ public class Hotel {
     private String hotelDescr;
 
     @Type(StringArrayType.class)
-    @Column(name = "nutrition_types", columnDefinition = "text[]", nullable = false)
+    @Column(columnDefinition = "text[]", nullable = false)
     private String[] nutritionTypes;
 
     @Type(StringArrayType.class)
-    @Column(name = "room_types", columnDefinition = "text[]", nullable = false)
+    @Column(columnDefinition = "text[]", nullable = false)
     private String[] roomTypes;
 
     @Column(nullable = false, columnDefinition = "integer")
     private int stars;
 
     @Type(StringArrayType.class)
-    @Column(name = "photos", columnDefinition = "text[]", nullable = false)
+    @Column(columnDefinition = "text[]", nullable = false)
     private String[] photos;
 
     @Column(columnDefinition = "text")

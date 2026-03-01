@@ -1,16 +1,22 @@
 import { getData } from "@/utils/getData";
-import { BASE_URL } from "@/constants/queryPaths";
+import {
+  getBookingCostsApiEndpoint,
+  getBookingAmountsApiEndpoint,
+  getBookingSummaryApiEndpoint,
+} from "@/constants/queryPaths";
 import { Analytics } from "@/components/analytics";
+import { getQueryParams } from "@/utils/getQueryParams";
 
 import styles from "./page.module.css";
 
 const getDefaultAnalytics = async () => {
   const year = new Date().getFullYear();
+  const params = getQueryParams({ year });
 
   return await Promise.all([
-    getData(`${BASE_URL}/booking/charts/costs?year=${year}`),
-    getData(`${BASE_URL}/booking/charts/amounts?year=${year}`),
-    getData(`${BASE_URL}/booking/summary?year=${year}`),
+    getData(getBookingCostsApiEndpoint(params)),
+    getData(getBookingAmountsApiEndpoint(params)),
+    getData(getBookingSummaryApiEndpoint(params)),
   ]);
 };
 

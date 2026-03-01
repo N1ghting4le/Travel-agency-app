@@ -7,8 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
     List<Review> findByTourIdOrderByReviewDateDesc(UUID tourId);
-    Optional<Review> findFirstByUserEmailOrderByReviewDateDesc(String email);
+    Optional<Review> findFirstByUserEmailAndTourIdOrderByReviewDateDesc(String email, UUID tourId);
 }

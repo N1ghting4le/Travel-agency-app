@@ -1,6 +1,10 @@
 "use client";
 
-import { BASE_URL } from "@/constants/queryPaths";
+import {
+  getBookingCostsApiEndpoint,
+  getBookingAmountsApiEndpoint,
+  getBookingSummaryApiEndpoint,
+} from "@/constants/queryPaths";
 import useQuery from "@/hooks/query.hook";
 import { useState } from "react";
 import { Autocomplete, TextField } from "@mui/material";
@@ -17,6 +21,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import { TableOfTours } from "./TableOfTours";
+import { getQueryParams } from "@/utils/getQueryParams";
 
 import styles from "./styles.module.css";
 
@@ -26,7 +31,7 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
 );
 
 const options = {
@@ -83,19 +88,11 @@ export function Analytics({ initialCosts, initialAmounts, initialSummary }) {
   const { query } = useQuery();
 
   const fetchAnalytics = (year, month, country) => {
-    let params = `year=${year}`;
+    const params = getQueryParams({ year, month, country });
 
-    if (month !== null) {
-      params += `&month=${month}`;
-    }
-
-    if (country) {
-      params += `&country=${country}`;
-    }
-
-    query(`${BASE_URL}/booking/charts/costs?${params}`).then(setCosts);
-    query(`${BASE_URL}/booking/charts/amounts?${params}`).then(setAmounts);
-    query(`${BASE_URL}/booking/summary?${params}`).then(setSummary);
+    query(getBookingCostsApiEndpoint(params)).then(setCosts);
+    query(getBookingAmountsApiEndpoint(params)).then(setAmounts);
+    query(getBookingSummaryApiEndpoint(params)).then(setSummary);
   };
 
   const handleYearChange = (_, newValue) => {

@@ -31,6 +31,7 @@ public class Resort {
 
     @OneToMany(mappedBy = "resort", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Hotel> hotels = new ArrayList<>();
+
     public Resort() {}
     public Resort(CreateResortDTO createResortDTO) {
         resortCountry = createResortDTO.getCountry();

@@ -1,6 +1,8 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.constants.BookingStatuses;
 import com.example.kursach_server.dto.booking.*;
+import com.example.kursach_server.exceptions.conflict.BookingAlreadyTakenException;
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.exceptions.conflict.UnavailableTourException;
@@ -10,47 +12,51 @@ import com.example.kursach_server.models.User;
 import com.example.kursach_server.repository.BookingRepository;
 import com.example.kursach_server.repository.TourRepository;
 import com.example.kursach_server.repository.UserRepository;
-import com.example.kursach_server.requests.DateRangeRequest;
+import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
-    @Autowired
-    private BookingRepository bookingRepository;
-    @Autowired
-    private TourRepository tourRepository;
-    @Autowired
-    private UserRepository userRepository;
-    public void createBooking(CreateBookingDTO createBookingDTO, HttpServletRequest request)
-            throws EntityNotFoundException, UnavailableTourException, BookingIntersectionException {
-        String email = (String) request.getAttribute("email");
+    private final BookingRepository bookingRepository;
+    private final TourRepository tourRepository;
+    private final UserRepository userRepository;
+
+    public BookingService(
+        BookingRepository bookingRepository,
+        TourRepository tourRepository,
+        UserRepository userRepository
+    ) {
+        this.bookingRepository = bookingRepository;
+        this.tourRepository = tourRepository;
+        this.userRepository = userRepository;
+    }
+
+    public UUID createBooking(CreateBookingDTO createBookingDTO, HttpServletRequest request)
+        throws EntityNotFoundException, UnavailableTourException, BookingIntersectionException {
+        String email = Utils.getUserEmail(request);
         Date startDate = createBookingDTO.getStartDate();
         Date endDate = createBookingDTO.getEndDate();
-        Tour tour = tourRepository.findById(createBookingDTO.getTourId())
-                .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
 
-        if (tour.getDelete() != null) {
+        Tour tour = tourRepository.findById(createBookingDTO.getTourId())
+            .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
+
+        if (tour.getDelete()) {
             throw new UnavailableTourException("Тур больше не доступен");
         }
 
         Optional<Booking> booking = bookingRepository
-                .findFirstByUserEmailAndStartDateLessThanEqualAndEndDateGreaterThanEqual(email, endDate, startDate);
+            .findFirstByUserEmailAndStartDateLessThanEqualAndEndDateGreaterThanEqual(email, endDate, startDate);
 
         if (booking.isPresent()) {
             throw new BookingIntersectionException("У вас уже есть бронь на эти даты");
         }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+            .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
         Booking newBooking = new Booking(createBookingDTO);
 
         newBooking.setTour(tour);
@@ -58,111 +64,123 @@ public class BookingService {
         user.getBookings().add(newBooking);
         tour.getBookings().add(newBooking);
         bookingRepository.save(newBooking);
+
+        return newBooking.getId();
     }
-    public List<BookingDTO> getUserBookings(UUID userId) {
-        return bookingRepository.findByUserId(userId).stream().map(BookingDTO::new).toList();
+
+    public List<BookingResponseDTO> getUserBookings(UUID userId) {
+        return bookingRepository.findByUserId(userId).stream().map(BookingResponseDTO::new).toList();
     }
-    public List<BookingWithUserInfoDTO> getBookingsInDateRange(DateRangeRequest dateRange) {
-        return bookingRepository
-                .findByBookingDateBetweenAndEmployeeIsNullOrderByBookingDateAsc(
-                        dateRange.getStartDate(), dateRange.getEndDate())
-                .stream().map(BookingWithUserInfoDTO::new).toList();
+
+    public List<BookingWithUserInfoResponseDTO> getBookingsInDateRange(Date startDate, Date endDate) {
+        return bookingRepository.findByBookingDateBetweenAndEmployeeIsNullOrderByBookingDateAsc(
+            startDate,
+            endDate
+        ).stream().map(BookingWithUserInfoResponseDTO::new).toList();
     }
-    public void takeBooking(UUID bookingId, HttpServletRequest request) throws EntityNotFoundException {
-        String email = (String) request.getAttribute("email");
+
+    public void takeBooking(UUID bookingId, HttpServletRequest request)
+        throws EntityNotFoundException, BookingAlreadyTakenException {
+        String email = Utils.getUserEmail(request);
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Бронь не найдена"));
+            .orElseThrow(() -> new EntityNotFoundException("Бронь не найдена"));
+
+        if (booking.getEmployee() != null) {
+            throw new BookingAlreadyTakenException("Бронирование уже взято сотрудником");
+        }
+
         User employee = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("Сотрудник не найден"));
+            .orElseThrow(() -> new EntityNotFoundException("Сотрудник не найден"));
 
         booking.setEmployee(employee);
-        booking.setStatus("Взято сотрудником");
+        booking.setStatus(BookingStatuses.TAKEN);
         employee.getTakenBookings().add(booking);
         bookingRepository.save(booking);
     }
+
     public void changeStatus(UUID bookingId, String action) throws EntityNotFoundException {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EntityNotFoundException("Бронь не найдена"));
+            .orElseThrow(() -> new EntityNotFoundException("Бронь не найдена"));
 
-        booking.setStatus(Objects.equals(action, "approve") ? "Одобрено" : "Отклонено");
+        booking.setStatus(Utils.getBookingStatusByAction(action));
         bookingRepository.save(booking);
     }
-    public List<BookingWithUserInfoDTO> getBookingsTakenByEmployee(UUID employeeId) {
-        return bookingRepository.findByEmployeeId(employeeId).stream().map(BookingWithUserInfoDTO::new).toList();
+
+    public List<BookingWithUserInfoResponseDTO> getBookingsTakenByEmployee(UUID employeeId) {
+        return bookingRepository
+            .findByEmployeeId(employeeId).stream().map(BookingWithUserInfoResponseDTO::new).toList();
     }
 
     public Object getBookingStats(Integer year, Integer month, String country) {
         if (year == null) {
-            throw new IllegalArgumentException("Year is required");
+            throw new IllegalArgumentException("Год обязателен");
         }
 
-        String normalizedCountry = normalizeCountry(country);
+        String normalizedCountry = Utils.normalizeCountry(country);
 
         if (month == null) {
-            // Статистика по месяцам года
             List<Object[]> results = bookingRepository.findMonthlyStats(year, normalizedCountry);
             return mapToMonthlyStats(results, year);
-        } else {
-            // Статистика по дням месяца
-            if (month < 0 || month > 11) {
-                throw new IllegalArgumentException("Month must be between 0 and 11");
-            }
-            List<Object[]> results = bookingRepository.findDailyStats(year, month, normalizedCountry);
-            return mapToDailyStats(results, year, month);
         }
+
+        if (month < 0 || month > 11) {
+            throw new IllegalArgumentException("Месяц должен быть между 0 и 11");
+        }
+
+        List<Object[]> results = bookingRepository.findDailyStats(year, month, normalizedCountry);
+        return mapToDailyStats(results, year, month);
     }
 
     public Object getBookingCounts(Integer year, Integer month, String country) {
         if (year == null) {
-            throw new IllegalArgumentException("Year is required");
+            throw new IllegalArgumentException("Год обязателен");
         }
 
-        String normalizedCountry = normalizeCountry(country);
+        String normalizedCountry = Utils.normalizeCountry(country);
 
         if (month == null) {
             List<Object[]> results = bookingRepository.findMonthlyCounts(year, normalizedCountry);
             return mapToMonthlyCounts(results, year);
-        } else {
-            if (month < 0 || month > 11) {
-                throw new IllegalArgumentException("Month must be between 0 and 11");
-            }
-            List<Object[]> results = bookingRepository.findDailyCounts(year, month, normalizedCountry);
-            return mapToDailyCounts(results, year, month);
         }
+
+        if (month < 0 || month > 11) {
+            throw new IllegalArgumentException("Месяц должен быть между 0 и 11");
+        }
+
+        List<Object[]> results = bookingRepository.findDailyCounts(year, month, normalizedCountry);
+        return mapToDailyCounts(results, year, month);
     }
 
     public SummaryStatsDTO getBookingSummary(Integer year, Integer month, String country) {
         if (year == null) {
-            throw new IllegalArgumentException("Year is required");
+            throw new IllegalArgumentException("Год обязателен");
         }
 
-        String normalizedCountry = normalizeCountry(country);
-
+        String normalizedCountry = Utils.normalizeCountry(country);
         Object[][] result;
 
         if (month == null) {
-            // Статистика за год
             result = bookingRepository.findYearlySummary(year, normalizedCountry);
         } else {
-            // Статистика за месяц
             if (month < 0 || month > 11) {
-                throw new IllegalArgumentException("Month must be between 0 and 11");
+                throw new IllegalArgumentException("Месяц должен быть между 0 и 11");
             }
+
             result = bookingRepository.findMonthlySummary(year, month, normalizedCountry);
         }
 
         return mapToSummaryStats(result, year, month, normalizedCountry);
     }
 
-    // Остальные методы маппинга остаются без изменений
     private List<MonthlyStatsDTO> mapToMonthlyStats(List<Object[]> results, int year) {
         int resultsIndex = 0;
         List<MonthlyStatsDTO> monthlyStats = new ArrayList<>();
 
         for (int i = 0; i < 12; i++) {
             if (resultsIndex < results.size() && ((Number) results.get(resultsIndex)[0]).intValue() == i) {
-                monthlyStats.add(new MonthlyStatsDTO(
-                        i, ((Number) results.get(resultsIndex)[1]).doubleValue(), year));
+                monthlyStats.add(
+                    new MonthlyStatsDTO(i, ((Number) results.get(resultsIndex)[1]).doubleValue(), year)
+                );
                 resultsIndex++;
             } else {
                 monthlyStats.add(new MonthlyStatsDTO(i, 0, year));
@@ -174,13 +192,14 @@ public class BookingService {
 
     private List<DailyStatsDTO> mapToDailyStats(List<Object[]> results, int year, int month) {
         int resultsIndex = 0;
-        List<DailyStatsDTO> dailyStats = new ArrayList<>();
         int daysInMonth = LocalDate.of(year, month + 1, 1).lengthOfMonth();
+        List<DailyStatsDTO> dailyStats = new ArrayList<>();
 
         for (int i = 1; i <= daysInMonth; i++) {
             if (resultsIndex < results.size() && ((Number) results.get(resultsIndex)[0]).intValue() == i) {
-                dailyStats.add(new DailyStatsDTO(
-                        i, month, year, ((Number) results.get(resultsIndex)[3]).doubleValue()));
+                dailyStats.add(
+                    new DailyStatsDTO(i, month, year, ((Number) results.get(resultsIndex)[3]).doubleValue())
+                );
                 resultsIndex++;
             } else {
                 dailyStats.add(new DailyStatsDTO(i, month, year, 0));
@@ -196,8 +215,7 @@ public class BookingService {
 
         for (int i = 0; i < 12; i++) {
             if (resultsIndex < results.size() && ((Number) results.get(resultsIndex)[0]).intValue() == i) {
-                monthlyStats.add(new MonthlyCountDTO(
-                        i, ((Number) results.get(resultsIndex)[1]).longValue(), year));
+                monthlyStats.add(new MonthlyCountDTO(i, ((Number) results.get(resultsIndex)[1]).longValue(), year));
                 resultsIndex++;
             } else {
                 monthlyStats.add(new MonthlyCountDTO(i, 0, year));
@@ -209,13 +227,14 @@ public class BookingService {
 
     private List<DailyCountDTO> mapToDailyCounts(List<Object[]> results, int year, int month) {
         int resultsIndex = 0;
-        List<DailyCountDTO> dailyStats = new ArrayList<>();
         int daysInMonth = LocalDate.of(year, month + 1, 1).lengthOfMonth();
+        List<DailyCountDTO> dailyStats = new ArrayList<>();
 
         for (int i = 1; i <= daysInMonth; i++) {
             if (resultsIndex < results.size() && ((Number) results.get(resultsIndex)[0]).intValue() == i) {
-                dailyStats.add(new DailyCountDTO(
-                        i, month, year, ((Number) results.get(resultsIndex)[3]).longValue()));
+                dailyStats.add(
+                    new DailyCountDTO(i, month, year, ((Number) results.get(resultsIndex)[3]).longValue())
+                );
                 resultsIndex++;
             } else {
                 dailyStats.add(new DailyCountDTO(i, month, year, 0));
@@ -239,52 +258,5 @@ public class BookingService {
         }
 
         return new SummaryStatsDTO(count, total, year, month, country);
-    }
-
-    public Page<TourStatsDTO> getTourStats(Integer year, Integer month, String country,
-                                           int page, int pageSize) {
-        String normalizedCountry = normalizeCountry(country);
-
-        // Валидация параметров пагинации
-        if (page < 0) {
-            page = 0;
-        }
-        if (pageSize <= 0) {
-            pageSize = 10; // значение по умолчанию
-        }
-        if (pageSize > 100) {
-            pageSize = 100; // ограничение максимального размера страницы
-        }
-
-        long offset = (long) page * pageSize;
-
-        // Получаем данные для текущей страницы
-        List<Object[]> results = bookingRepository.findTourStats(
-                year, month, normalizedCountry, pageSize, offset);
-
-        // Получаем общее количество
-        long totalElements = bookingRepository.countTourStats(year, month, normalizedCountry);
-
-        // Маппим результаты
-        List<TourStatsDTO> content = mapToTourStats(results);
-
-        return new PageImpl<>(content, PageRequest.of(page, pageSize), totalElements);
-    }
-
-    private List<TourStatsDTO> mapToTourStats(List<Object[]> results) {
-        return results.stream()
-                .map(result -> new TourStatsDTO(
-                        (UUID) result[0], // tour_id
-                        (String) result[1], // tour_title
-                        (String) result[2], // destination_country
-                        (String) result[3], // resort_title
-                        ((Number) result[4]).longValue(), // total_bookings
-                        ((Number) result[5]).doubleValue() // total_amount
-                ))
-                .collect(Collectors.toList());
-    }
-
-    private String normalizeCountry(String country) {
-        return (country == null || country.trim().isEmpty()) ? null : country.trim();
     }
 }

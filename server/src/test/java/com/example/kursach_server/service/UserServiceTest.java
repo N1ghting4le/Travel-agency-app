@@ -2,9 +2,9 @@ package com.example.kursach_server.service;
 
 import com.example.kursach_server.dto.user.CreateUserDTO;
 import com.example.kursach_server.requests.SignInRequest;
-import com.example.kursach_server.dto.user.UserWithTokenDTO;
+import com.example.kursach_server.dto.user.UserWithTokenResponseDTO;
 import com.example.kursach_server.exceptions.conflict.EntityAlreadyExistsException;
-import com.example.kursach_server.exceptions.IncorrectPasswordException;
+import com.example.kursach_server.exceptions.forbidden.IncorrectPasswordException;
 import com.example.kursach_server.exceptions.notFound.UserNotExistsException;
 import com.example.kursach_server.models.User;
 import com.example.kursach_server.repository.UserRepository;
@@ -33,7 +33,8 @@ import static org.mockito.Mockito.when;
 public class UserServiceTest {
 
     @Container
-    public static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:16-alpine")
+    public static PostgreSQLContainer<?> postgreSQLContainer =
+        new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("testdb")
             .withUsername("testuser")
             .withPassword("testpass");
@@ -79,7 +80,7 @@ public class UserServiceTest {
         request.setPhoneOrEmail(testEmail);
         request.setPassword(testPassword);
 
-        UserWithTokenDTO userWithTokenDTO = userService.getUser(request);
+        UserWithTokenResponseDTO userWithTokenDTO = userService.getUser(request);
 
         assertNotNull(userWithTokenDTO);
         assertNotNull(userWithTokenDTO.getToken());
@@ -92,7 +93,7 @@ public class UserServiceTest {
         request.setPhoneOrEmail("+1234567890");
         request.setPassword(testPassword);
 
-        UserWithTokenDTO userWithTokenDTO = userService.getUser(request);
+        UserWithTokenResponseDTO userWithTokenDTO = userService.getUser(request);
 
         assertNotNull(userWithTokenDTO);
         assertEquals(testEmail, userWithTokenDTO.getUser().getEmail());
@@ -108,7 +109,7 @@ public class UserServiceTest {
         dto.setSurname("Doe");
         dto.setPhoneNumber("+1234567891");
 
-        UserWithTokenDTO result = userService.createUser(dto, mockRequestWithRegularUser());
+        UserWithTokenResponseDTO result = userService.createUser(dto, mockRequestWithRegularUser());
 
         assertNotNull(result);
         assertNotNull(result.getToken());
