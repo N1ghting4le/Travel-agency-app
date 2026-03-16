@@ -19,6 +19,8 @@ export const getResortsByCountryApiEndpoint = (country) =>
   `${BASE_URL}/resort/get/${country}`;
 export const getHotelsByCountryEndpoint = (country) =>
   `${BASE_URL}/hotel/getHotels/${country}`;
+export const getHotelsByParamsEndpoint = (params) =>
+  `${BASE_URL}/hotel/getHotels?${params}`;
 
 export const CREATE_HOTEL_API_ENDPOINT = `${BASE_URL}/hotel/create`;
 

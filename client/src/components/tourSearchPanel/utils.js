@@ -1,22 +1,16 @@
 import BeachAccess from "@mui/icons-material/BeachAccess";
 import Hotel from "@mui/icons-material/Hotel";
 
-export const filterHotels = (hotels, pickedResorts, nutrition, rooms, stars) =>
-  hotels
-    .filter(
-      (h) =>
-        (!pickedResorts.length || pickedResorts.some((r) => r === h.resort)) &&
-        (!nutrition.length ||
-          nutrition.some((n) => h.nutritionTypes.includes(n.value))) &&
-        (!rooms.length || rooms.some((r) => h.roomTypes.includes(r.value))) &&
-        h.stars >= stars,
-    )
-    .map((h) => h.hotelTitle);
-
-export const getResortsAndHotelsMenus = (resorts, hotels, isResortsSuccess, isHotelsSuccess) => [
+export const getResortsAndHotelsMenus = (
+  resorts,
+  hotels,
+  isResortsSuccess,
+  isHotelsSuccess,
+) => [
   {
     name: "resorts",
     values: resorts,
+    valueField: "resortTitle",
     isSuccess: isResortsSuccess,
     text: "Курорт",
     Icon: BeachAccess,
@@ -24,8 +18,12 @@ export const getResortsAndHotelsMenus = (resorts, hotels, isResortsSuccess, isHo
   {
     name: "hotels",
     values: hotels,
+    valueField: "hotelTitle",
     isSuccess: isHotelsSuccess,
     text: "Отель",
     Icon: Hotel,
-  }
+  },
 ];
+
+export const extractValues = (arr, valueField) =>
+  arr.map((item) => item[valueField]);

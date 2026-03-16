@@ -2,22 +2,23 @@
 
 import {
   getResortsByCountryApiEndpoint,
-  getHotelsByCountryEndpoint,
   GET_TOURS_API_ENDPOINT,
+  getHotelsByParamsEndpoint,
 } from "@/constants/queryPaths";
 import styles from "./tourSearchPanel.module.css";
 import SelectMenu from "../selectMenu/SelectMenu";
 import SubmitBtn from "../submitBtn/SubmitBtn";
 import Stars from "../stars/Stars";
 import Place from "@mui/icons-material/Place";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTours } from "../globalContext/hooks/useTours";
 import useQuery from "@/hooks/query.hook";
 import countries from "@/lists/countries";
 import departureCities from "@/lists/departureCities";
+import { getQueryParams } from "@/utils/getQueryParams";
 import { staticMenus } from "./constants";
-import { filterHotels, getResortsAndHotelsMenus } from "./utils";
+import { getResortsAndHotelsMenus, extractValues } from "./utils";
 
 const TourSearchPanel = ({ query }) => {
   const [stars, setStars] = useState(1);
@@ -42,36 +43,58 @@ const TourSearchPanel = ({ query }) => {
   const nutrition = watch("nutrition");
   const rooms = watch("rooms");
 
+  const updateHotels = async (resorts) => {
+    const params = {
+      country,
+      resorts: extractValues(resorts, "resortTitle"),
+      nutrition: extractValues(nutrition, "value"),
+      rooms: extractValues(rooms, "value"),
+      stars,
+    };
+
+    const res = await getHotels(
+      getHotelsByParamsEndpoint(getQueryParams(params)),
+      {
+        authorize: false,
+      },
+    );
+
+    setHotels(res);
+  };
+
   useEffect(() => {
     setResorts([]);
     setValue("resorts", []);
     setHotels([]);
     setValue("hotels", []);
+
     getResorts(getResortsByCountryApiEndpoint(country), {
       authorize: false,
-    }).then((res) => setResorts(res.map((r) => r.resortTitle)));
-    getHotels(getHotelsByCountryEndpoint(country), { authorize: false }).then(
-      (res) => setHotels(res),
-    );
-  }, [setValue, getResorts, getHotels, country]);
+    }).then(setResorts);
 
-  const showedHotels = useMemo(
-    () => filterHotels(hotels, pickedResorts, nutrition, rooms, stars),
-    [hotels, pickedResorts, nutrition, rooms, stars],
-  );
+    updateHotels([]);
+  }, [country]);
 
   useEffect(() => {
+    updateHotels(pickedResorts);
+  }, [pickedResorts, nutrition, rooms, stars]);
+
+  useEffect(() => {
+    const ids = hotels.map((h) => h.id);
+
     setValue(
       "hotels",
-      getValues("hotels").filter((h) => showedHotels.includes(h)),
+      getValues("hotels").filter((h) => ids.includes(h.id)),
     );
-  }, [showedHotels, setValue, getValues]);
+  }, [hotels, setValue, getValues]);
 
   const onSubmit = async (data) => {
     const body = {
       ...data,
-      nutrition: data.nutrition.map((item) => item.value),
-      rooms: data.rooms.map((item) => item.value),
+      resorts: extractValues(data.resorts, "resortTitle"),
+      hotels: extractValues(data.hotels, "hotelTitle"),
+      nutrition: extractValues(data.nutrition, "value"),
+      rooms: extractValues(data.rooms, "value"),
       stars,
     };
 
@@ -86,7 +109,7 @@ const TourSearchPanel = ({ query }) => {
 
   const resortsAndHotelsMenus = getResortsAndHotelsMenus(
     resorts,
-    showedHotels,
+    hotels,
     isResortsSuccess,
     isHotelsSuccess,
   );
@@ -120,10 +143,11 @@ const TourSearchPanel = ({ query }) => {
           <Stars stars={stars} setStars={setStars} />
         </div>
         {resortsAndHotelsMenus.map(
-          ({ name, values, isSuccess, text, Icon }) => (
+          ({ name, values, valueField, isSuccess, text, Icon }) => (
             <SelectMenu
               key={name}
               values={values}
+              valueField={valueField}
               name={name}
               control={control}
               multiple={true}
