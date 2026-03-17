@@ -2,15 +2,39 @@
 
 import TourSearchPanel from "./tourSearchPanel/TourSearchPanel";
 import ToursList from "./toursList/ToursList";
-import useQuery from "@/hooks/query.hook";
+import { usePagination } from "@/hooks/pagination.hook";
 
 const TourWrapper = () => {
-  const { query, isLoading, isError } = useQuery();
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    pagination,
+    initialQuery,
+    paginatedQuery,
+    queryState: { isLoading, isError },
+    paginatedQueryArgumentsRef,
+  } = usePagination();
 
   return (
     <>
-      <TourSearchPanel query={query} />
-      <ToursList isLoading={isLoading} isError={isError} />
+      <TourSearchPanel
+        query={initialQuery}
+        {...{ paginatedQueryArgumentsRef }}
+      />
+      <ToursList
+        {...{
+          isLoading,
+          isError,
+          page,
+          setPage,
+          pageSize,
+          setPageSize,
+          pagination,
+          paginatedQuery,
+        }}
+      />
     </>
   );
 };

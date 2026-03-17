@@ -36,4 +36,17 @@ public class HotelController {
     public List<HotelPreviewDTO> getHotelsByCountry(@PathVariable @NotNull @NotBlank String country) {
         return hotelService.getHotelsByCountry(country);
     }
+
+    @GetMapping("/getHotels")
+    public List<HotelPreviewDTO> getHotelsByParams(
+        @RequestParam @NotNull @NotBlank String country,
+        @RequestParam(required = false) List<String> resorts,
+        @RequestParam(required = false) List<String> nutrition,
+        @RequestParam(required = false) List<String> rooms,
+        @RequestParam int stars
+    ) {
+        return hotelService.getHotelsByParams(
+            country, resorts, nutrition, rooms, stars
+        );
+    }
 }

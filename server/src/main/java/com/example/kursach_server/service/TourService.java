@@ -1,5 +1,6 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.dto.PageDto;
 import com.example.kursach_server.dto.booking.TourStatsDTO;
 import com.example.kursach_server.dto.tour.CreateTourDTO;
 import com.example.kursach_server.dto.tour.TourResponseDTO;
@@ -14,10 +15,11 @@ import com.example.kursach_server.utils.Utils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.example.kursach_server.repository.TourRepository;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,25 +34,33 @@ public class TourService {
         this.hotelRepository = hotelRepository;
     }
 
-    public List<TourPreviewDTO> getToursByParams(TourParamsRequest request) {
+    public PageDto<TourPreviewDTO> getToursByParams(TourParamsRequest request, int page, int pageSize) {
         String departureCity = request.getDepartureCity();
         String destinationCountry = request.getDestinationCountry();
-        List<String> nutrition = request.getNutrition();
-        List<String> rooms = request.getRooms();
-        List<String> resortTitles = request.getResorts();
-        List<String> hotelTitles = request.getHotels();
         List<Tour> tours = tourRepository.findByCriteria(departureCity, destinationCountry, request.getStars());
 
-        return tours.stream().filter(tour -> {
+        List<TourPreviewDTO> filteredTours = tours.stream().filter(tour -> {
             Hotel hotel = tour.getHotel();
 
             return (
-                (nutrition.isEmpty() || Arrays.stream(hotel.getNutritionTypes()).anyMatch(nutrition::contains)) &&
-                (rooms.isEmpty() || Arrays.stream(hotel.getRoomTypes()).anyMatch(rooms::contains)) &&
-                (hotelTitles.isEmpty() || hotelTitles.contains(hotel.getHotelTitle())) &&
-                (resortTitles.isEmpty() || resortTitles.contains(hotel.getResort().getResortTitle()))
+                Utils.listAndArrayEmptyOrIntersect(request.getNutrition(), hotel.getNutritionTypes()) &&
+                Utils.listAndArrayEmptyOrIntersect(request.getRooms(), hotel.getRoomTypes()) &&
+                Utils.emptyOrContains(request.getHotels(), hotel.getHotelTitle()) &&
+                Utils.emptyOrContains(request.getResorts(), hotel.getResort().getResortTitle())
             );
         }).map(TourPreviewDTO::new).toList();
+
+        Pageable pageable = PageRequest.of(page, pageSize);
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), filteredTours.size());
+
+        List<TourPreviewDTO> pageContent = start > filteredTours.size()
+            ? Collections.emptyList()
+            : filteredTours.subList(start, end);
+
+        Page<TourPreviewDTO> responsePage = new PageImpl<>(pageContent, pageable, filteredTours.size());
+        return new PageDto<>(responsePage);
     }
 
     public UUID createTour(CreateTourDTO createTourDTO) throws EntityNotFoundException {

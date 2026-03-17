@@ -4,8 +4,21 @@ import { useContext } from "react";
 import { Context } from "../GlobalContext";
 
 export const useTours = () => {
-  const { tours, setTours, changeTour, changeAvgMark, deleteTour } =
-    useContext(Context);
+  const {
+    tours,
+    toursSearchParamsRef,
+    setTours,
+    changeTour,
+    changeAvgMark,
+    deleteTour,
+  } = useContext(Context);
 
-  return { tours, setTours, changeTour, changeAvgMark, deleteTour };
+  return {
+    tours,
+    toursSearchParamsRef,
+    setTours,
+    changeTour,
+    changeAvgMark,
+    deleteTour,
+  };
 };

@@ -8,6 +8,7 @@ import com.example.kursach_server.models.Hotel;
 import com.example.kursach_server.models.Resort;
 import com.example.kursach_server.repository.HotelRepository;
 import com.example.kursach_server.repository.ResortRepository;
+import com.example.kursach_server.utils.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -83,5 +84,21 @@ public class HotelService {
 
     public List<HotelPreviewDTO> getHotelsByCountry(String country) {
         return hotelRepository.findByResortResortCountry(country).stream().map(HotelPreviewDTO::new).toList();
+    }
+
+    public List<HotelPreviewDTO> getHotelsByParams(
+        String country,
+        List<String> resortTitles,
+        List<String> nutritionTypes,
+        List<String> roomTypes,
+        int stars
+    ) {
+        List<Hotel> hotels = hotelRepository.findByResortResortCountryAndStarsGreaterThanEqual(country, stars);
+
+        return hotels.stream().filter(hotel -> (
+            Utils.emptyOrContains(resortTitles, hotel.getResort().getResortTitle()) &&
+            Utils.listAndArrayEmptyOrIntersect(nutritionTypes, hotel.getNutritionTypes()) &&
+            Utils.listAndArrayEmptyOrIntersect(roomTypes, hotel.getRoomTypes())
+        )).map(HotelPreviewDTO::new).toList();
     }
 }

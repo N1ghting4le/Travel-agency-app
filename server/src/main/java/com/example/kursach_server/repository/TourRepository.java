@@ -22,6 +22,7 @@ public interface TourRepository extends JpaRepository<Tour, UUID> {
         @Param("destinationCountry") String destinationCountry,
         @Param("hotelStars") Integer hotelStars
     );
+
     List<Tour> findByDeleteIsTrue();
 
     @Query(

@@ -1,6 +1,7 @@
 package com.example.kursach_server.controllers;
 
 import com.example.kursach_server.constants.Roles;
+import com.example.kursach_server.dto.PageDto;
 import com.example.kursach_server.dto.booking.TourStatsDTO;
 import com.example.kursach_server.dto.tour.CreateTourDTO;
 import com.example.kursach_server.dto.tour.TourResponseDTO;
@@ -11,12 +12,10 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.example.kursach_server.requests.TourParamsRequest;
 import com.example.kursach_server.service.TourService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -29,8 +28,12 @@ public class TourController {
     }
 
     @PostMapping("/getTours")
-    public List<TourPreviewDTO> getToursByParams(@Valid @RequestBody TourParamsRequest request) {
-        return tourService.getToursByParams(request);
+    public PageDto<TourPreviewDTO> getToursByParams(
+        @Valid @RequestBody TourParamsRequest request,
+        @RequestParam int page,
+        @RequestParam int pageSize
+    ) {
+        return tourService.getToursByParams(request, page, pageSize);
     }
 
     @PostMapping("/create")
@@ -61,8 +64,8 @@ public class TourController {
         @RequestParam(required = false) Integer year,
         @RequestParam(required = false) Integer month,
         @RequestParam(required = false) String country,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int pageSize
+        @RequestParam int page,
+        @RequestParam int pageSize
     ) {
         return tourService.getTourStats(year, month, country, page, pageSize);
     }

@@ -20,12 +20,22 @@ import { getQueryParams } from "@/utils/getQueryParams";
 import { staticMenus } from "./constants";
 import { getResortsAndHotelsMenus, extractValues } from "./utils";
 
-const TourSearchPanel = ({ query }) => {
-  const [stars, setStars] = useState(1);
-  const [resorts, setResorts] = useState([]);
-  const [hotels, setHotels] = useState([]);
-  const { control, handleSubmit, watch, setValue, getValues } = useForm({
-    defaultValues: {
+const TourSearchPanel = ({ query, paginatedQueryArgumentsRef }) => {
+  const { setTours, toursSearchParamsRef } = useTours();
+  const formValues = toursSearchParamsRef.current.formValues;
+
+  const [stars, setStars] = useState(formValues?.stars ?? 1);
+  const [resorts, setResorts] = useState(formValues?.resorts ?? []);
+  const [hotels, setHotels] = useState(formValues?.hotels ?? []);
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    getValues,
+    formState: { isDirty },
+  } = useForm({
+    defaultValues: formValues ?? {
       departureCity: departureCities[0],
       destinationCountry: countries[0],
       nutrition: [],
@@ -34,7 +44,6 @@ const TourSearchPanel = ({ query }) => {
       hotels: [],
     },
   });
-  const { setTours } = useTours();
   const { query: getResorts, isSuccess: isResortsSuccess } = useQuery();
   const { query: getHotels, isSuccess: isHotelsSuccess } = useQuery();
 
@@ -62,11 +71,34 @@ const TourSearchPanel = ({ query }) => {
     setHotels(res);
   };
 
+  const getQueryArguments = (data) => {
+    const body = {
+      ...data,
+      resorts: extractValues(data.resorts, "resortTitle"),
+      hotels: extractValues(data.hotels, "hotelTitle"),
+      nutrition: extractValues(data.nutrition, "value"),
+      rooms: extractValues(data.rooms, "value"),
+      stars,
+    };
+
+    return [
+      GET_TOURS_API_ENDPOINT,
+      {
+        method: "POST",
+        json: true,
+        authorize: false,
+        body: JSON.stringify(body),
+      },
+    ];
+  };
+
   useEffect(() => {
-    setResorts([]);
-    setValue("resorts", []);
-    setHotels([]);
-    setValue("hotels", []);
+    if (isDirty) {
+      setResorts([]);
+      setValue("resorts", []);
+      setHotels([]);
+      setValue("hotels", []);
+    }
 
     getResorts(getResortsByCountryApiEndpoint(country), {
       authorize: false,
@@ -88,22 +120,16 @@ const TourSearchPanel = ({ query }) => {
     );
   }, [hotels, setValue, getValues]);
 
-  const onSubmit = async (data) => {
-    const body = {
-      ...data,
-      resorts: extractValues(data.resorts, "resortTitle"),
-      hotels: extractValues(data.hotels, "hotelTitle"),
-      nutrition: extractValues(data.nutrition, "value"),
-      rooms: extractValues(data.rooms, "value"),
-      stars,
-    };
+  useEffect(() => {
+    if (formValues) {
+      paginatedQueryArgumentsRef.current = getQueryArguments(formValues);
+    }
+  }, []);
 
-    const res = await query(GET_TOURS_API_ENDPOINT, {
-      method: "POST",
-      json: true,
-      authorize: false,
-      body: JSON.stringify(body),
-    });
+  const onSubmit = async (data) => {
+    toursSearchParamsRef.current.formValues = { ...data, stars };
+
+    const res = await query(...getQueryArguments(data));
     setTours(res);
   };
 

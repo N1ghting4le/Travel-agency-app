@@ -6,7 +6,8 @@ import AccordionContainer from "../accordionContainer/AccordionContainer";
 import ToursListItem from "../toursListItem/ToursListItem";
 import TourLoading from "../loadingSpinners/TourLoading";
 import { Checkbox, FormControlLabel, Slider } from "@mui/material";
-import { useState } from "react";
+import { Pagination } from "../pagination";
+import { useState, useEffect } from "react";
 import { useTours } from "../globalContext/hooks/useTours";
 import icon from "../../public/landing_icon.png";
 import nutritionTypes from "@/lists/nutritionTypes";
@@ -21,8 +22,17 @@ import {
 } from "./constants";
 import { filterTours } from "./utils";
 
-const ToursList = ({ isLoading, isError }) => {
-  const { tours } = useTours();
+const ToursList = ({
+  isLoading,
+  isError,
+  page,
+  setPage,
+  pageSize,
+  setPageSize,
+  pagination,
+  paginatedQuery,
+}) => {
+  const { tours, setTours, toursSearchParamsRef } = useTours();
   const [priceRange, setPriceRange] = useState([MIN_PRICE, MAX_PRICE]);
   const [minRating, setMinRating] = useState(0);
   const [activeNutrTypes, setActiveNutrTypes] = useState(
@@ -31,6 +41,29 @@ const ToursList = ({ isLoading, isError }) => {
   const [activeRoomTypes, setActiveRoomTypes] = useState(
     roomTypes.map((type) => type.value),
   );
+
+  useEffect(() => {
+    paginatedQuery().then((res) => {
+      if (res) {
+        setTours(res);
+      }
+    });
+  }, [paginatedQuery, setTours]);
+
+  useEffect(() => {
+    toursSearchParamsRef.current.page = page;
+  }, [page]);
+
+  useEffect(() => {
+    toursSearchParamsRef.current.pageSize = pageSize;
+  }, [pageSize]);
+
+  useEffect(() => {
+    const { page, pageSize } = toursSearchParamsRef.current;
+
+    setPage(page);
+    setPageSize(pageSize, false);
+  }, []);
 
   const handleSliderChange = (_, newRange) => {
     setPriceRange(newRange);
@@ -149,11 +182,14 @@ const ToursList = ({ isLoading, isError }) => {
           <div className={styles.checkboxWrapper}>{roomTypesCheckboxes}</div>
         </AccordionContainer>
       </div>
-      <ul className={styles.toursList}>
-        {filteredTours.map((tour) => (
-          <ToursListItem key={tour.id} tour={tour} />
-        ))}
-      </ul>
+      <div className={styles.toursListAndPagination}>
+        <ul className={styles.toursList}>
+          {filteredTours.map((tour) => (
+            <ToursListItem key={tour.id} tour={tour} />
+          ))}
+        </ul>
+        <Pagination {...{ page, setPage, pagination }} />
+      </div>
     </div>
   );
 };

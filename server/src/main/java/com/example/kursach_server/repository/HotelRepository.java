@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, UUID> {
     List<Hotel> findByResortResortCountry(String hotelCountry);
+    List<Hotel> findByResortResortCountryAndStarsGreaterThanEqual(String hotelCountry, int stars);
 }
