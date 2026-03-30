@@ -8,8 +8,11 @@ export const metadata = {
 };
 
 const EditTourPage = async ({ params }) => {
-  const { hotel, ...tour } = await getData(getTourByIdApiEndpoint(params.id));
-  const tourObj = { ...tour, hotelTitle: hotel.hotelTitle };
+  const {
+    hotel: { id, hotelTitle },
+    ...tour
+  } = await getData(getTourByIdApiEndpoint(params.id));
+  const tourObj = { ...tour, hotel: { id, hotelTitle } };
 
   return (
     <main className={styles.main}>

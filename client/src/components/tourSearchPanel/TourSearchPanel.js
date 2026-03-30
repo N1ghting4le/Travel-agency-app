@@ -12,7 +12,7 @@ import Stars from "../stars/Stars";
 import Place from "@mui/icons-material/Place";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useTours } from "../globalContext/hooks/useTours";
+import { useToursSearchParamsRef } from "../globalContext/hooks/useToursSearchParamsRef";
 import useQuery from "@/hooks/query.hook";
 import countries from "@/lists/countries";
 import departureCities from "@/lists/departureCities";
@@ -20,8 +20,8 @@ import { getQueryParams } from "@/utils/getQueryParams";
 import { staticMenus } from "./constants";
 import { getResortsAndHotelsMenus, extractValues } from "./utils";
 
-const TourSearchPanel = ({ query, paginatedQueryArgumentsRef }) => {
-  const { setTours, toursSearchParamsRef } = useTours();
+const TourSearchPanel = ({ query, paginatedQueryArgumentsRef, setTours }) => {
+  const { toursSearchParamsRef } = useToursSearchParamsRef();
   const formValues = toursSearchParamsRef.current.formValues;
 
   const [stars, setStars] = useState(formValues?.stars ?? 1);

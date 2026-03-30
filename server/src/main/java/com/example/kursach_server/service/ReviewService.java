@@ -1,9 +1,8 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.constants.BookingStatuses;
 import com.example.kursach_server.constants.Time;
-import com.example.kursach_server.dto.review.CreateReviewDTO;
-import com.example.kursach_server.dto.review.ReviewResponseDTO;
-import com.example.kursach_server.dto.review.UpdateReviewDTO;
+import com.example.kursach_server.dto.review.*;
 import com.example.kursach_server.exceptions.conflict.TourNotFinishedException;
 import com.example.kursach_server.exceptions.forbidden.EarlyReviewAttemptException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
@@ -17,6 +16,10 @@ import com.example.kursach_server.repository.TourRepository;
 import com.example.kursach_server.repository.UserRepository;
 import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -40,8 +43,18 @@ public class ReviewService {
         this.bookingRepository = bookingRepository;
     }
 
-    public List<ReviewResponseDTO> getTourReviews(UUID id) {
-        return reviewRepository.findByTourIdOrderByReviewDateDesc(id).stream().map(ReviewResponseDTO::new).toList();
+    public Page<ReviewResponseDTO> getTourReviews(UUID id, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("reviewDate").descending());
+        return reviewRepository.findByTourId(id, pageable).map(ReviewResponseDTO::new);
+    }
+
+    public AvgMarkAndReviewsAmountResponseDTO getAvgMarkAndReviewsAmount(UUID id) {
+        AvgMarkAndReviewsAmountProjection projection = reviewRepository.getAvgMarkAndReviewsAmountByTourId(id);
+
+        return new AvgMarkAndReviewsAmountResponseDTO(
+            projection.getAvgMark(),
+            projection.getReviewsAmount()
+        );
     }
 
     public ReviewResponseDTO createReview(CreateReviewDTO createReviewDTO, HttpServletRequest request)
@@ -53,7 +66,9 @@ public class ReviewService {
             .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
         Date now = new Date();
 
-        if (!bookingRepository.existsByUserIdAndTourIdAndEndDateLessThanEqual(user.getId(), tour.getId(), now)) {
+        if (!bookingRepository.existsByUserIdAndTourIdAndStatus(
+            user.getId(), tour.getId(), BookingStatuses.COMPLETED
+        )) {
             throw new TourNotFinishedException("Вы не можете оставить отзыв не завершив тур");
         }
 

@@ -9,7 +9,7 @@ import { boxStyle } from "./constants";
 const ReviewModal = ({
   open,
   setOpen,
-  setReviews,
+  invalidateReviews,
   review,
   setReviewIndex,
   tourId,
@@ -33,7 +33,7 @@ const ReviewModal = ({
           +
         </p>
         <ReviewForm
-          setReviews={setReviews}
+          invalidateReviews={invalidateReviews}
           review={review}
           tourId={tourId}
           setCanClose={setCanClose}

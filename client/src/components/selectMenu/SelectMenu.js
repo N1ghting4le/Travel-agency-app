@@ -8,6 +8,7 @@ import {
   Autocomplete,
   TextField,
   Chip,
+  Tooltip,
 } from "@mui/material";
 import { Controller } from "react-hook-form";
 
@@ -64,20 +65,39 @@ const SelectMenu = ({
             }
             disableClearable={disableClearable || !value}
             renderTags={(value, getTagProps) => (
-              <div className={styles.chipContainer}>
-                {value.map((option, index) => {
-                  const { key, ...tagProps } = getTagProps({ index });
+              // <div className={styles.chipContainer}>
+              //   {value.map((option, index) => {
+              //     const { key, ...tagProps } = getTagProps({ index });
 
-                  return (
-                    <Chip
-                      key={key}
-                      label={valueField ? option[valueField] : option}
-                      {...tagProps}
-                      size="small"
-                    />
-                  );
-                })}
-              </div>
+              //     return (
+              //       <Chip
+              //         key={key}
+              //         label={valueField ? option[valueField] : option}
+              //         {...tagProps}
+              //         size="small"
+              //       />
+              //     );
+              //   })}
+              // </div>
+              <Tooltip
+                title={
+                  <ul>
+                    {value.map((item, i) => (
+                      <li key={i}>
+                        {valueField ? (item[valueField] ?? "") : item}
+                      </li>
+                    ))}
+                  </ul>
+                }
+                arrow
+              >
+                <Chip
+                  label={
+                    <p className={styles.label}>Выбрано: {value.length}</p>
+                  }
+                  size="small"
+                />
+              </Tooltip>
             )}
           />
         )}

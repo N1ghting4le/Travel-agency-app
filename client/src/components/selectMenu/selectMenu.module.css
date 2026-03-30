@@ -8,3 +8,7 @@
 .chipContainer::-webkit-scrollbar {
     height: 0;
 }
+
+.label {
+    font-variant-numeric: tabular-nums;
+}

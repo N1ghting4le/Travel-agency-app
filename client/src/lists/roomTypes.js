@@ -1,3 +1,5 @@
+import { createOrderWeights } from "@/utils/createOrderWeights";
+
 const roomTypes = [
   {
     value: "SGL",
@@ -32,3 +34,5 @@ const roomTypes = [
 ];
 
 export default roomTypes;
+
+export const roomOrderWeights = createOrderWeights(roomTypes, "value");

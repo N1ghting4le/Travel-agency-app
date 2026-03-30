@@ -1,4 +1,4 @@
-import { object, mixed } from "yup";
+import { object, mixed, string } from "yup";
 import dayjs from "dayjs";
 
 import { minDate, maxDate } from "./constants";
@@ -51,6 +51,11 @@ const schema = object().shape({
         );
       },
     ),
+  email: string()
+    .trim()
+    .transform((value) => value.toLowerCase())
+    .notRequired(),
+  phoneNumber: string().trim().notRequired(),
 });
 
 export default schema;

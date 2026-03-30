@@ -1,9 +1,11 @@
 package com.example.kursach_server.dto.tour;
 
-import com.example.kursach_server.models.Hotel;
+import com.example.kursach_server.dto.hotel.HotelResponseDTO;
+import com.example.kursach_server.models.Review;
 import com.example.kursach_server.models.Tour;
 import lombok.Getter;
 
+import java.util.OptionalDouble;
 import java.util.UUID;
 
 @Getter
@@ -14,8 +16,8 @@ public class TourResponseDTO {
     private final String tourNotes;
     private final String departureCity;
     private final String destinationCountry;
+    private final HotelResponseDTO hotel;
     private final double basePrice;
-    private final Hotel hotel;
 
     public TourResponseDTO(Tour tour) {
         id = tour.getId();
@@ -25,8 +27,6 @@ public class TourResponseDTO {
         departureCity = tour.getDepartureCity();
         destinationCountry = tour.getDestinationCountry();
         basePrice = tour.getBasePrice();
-        hotel = tour.getHotel();
-        hotel.setTours(null);
-        hotel.getResort().setHotels(null);
+        hotel = new HotelResponseDTO(tour.getHotel());
     }
 }

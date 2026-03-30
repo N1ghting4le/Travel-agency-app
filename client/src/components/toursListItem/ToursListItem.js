@@ -1,19 +1,23 @@
 "use client";
 
-import { deleteTourApiEndpoint } from "@/constants/queryPaths";
+import { archiveTourApiEndpoint } from "@/constants/queryPaths";
 import styles from "./toursListItem.module.css";
 import { useAdmin } from "../globalContext/hooks/useAdmin";
-import { useTours } from "../globalContext/hooks/useTours";
 import useQuery from "@/hooks/query.hook";
 import Link from "next/link";
 import DisplayStars from "../displayStars/DisplayStars";
 import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import ArchiveIcon from "@mui/icons-material/Archive";
 import AdminSpinner from "../loadingSpinners/AdminSpinner";
 import { reviewStr } from "../tourReviews/utils";
 import { getPhotoSrc } from "@/app/(regularUser)/tours/[id]/utils";
 
-const ToursListItem = ({ tour }) => {
+const ToursListItem = ({
+  tour,
+  invalidateTours,
+  invalidateToursTimeoutRef,
+  resetQueryStateTimeoutRef,
+}) => {
   const {
     id,
     tourTitle,
@@ -25,16 +29,15 @@ const ToursListItem = ({ tour }) => {
   } = tour;
   const { hotelTitle, resort, photo, stars } = hotel;
   const { isAdmin } = useAdmin();
-  const { deleteTour } = useTours();
   const { query, isIdle, isLoading, isError, isSuccess, resetQueryState } =
     useQuery();
 
-  const removeTour = async () => {
+  const archiveTour = async () => {
     try {
-      await query(deleteTourApiEndpoint(id), { method: "DELETE" });
-      setTimeout(() => deleteTour(id), 2000);
+      await query(archiveTourApiEndpoint(id));
+      invalidateToursTimeoutRef.current = setTimeout(invalidateTours, 2000);
     } finally {
-      setTimeout(resetQueryState, 2000);
+      resetQueryStateTimeoutRef.current = setTimeout(resetQueryState, 2000);
     }
   };
 
@@ -73,9 +76,9 @@ const ToursListItem = ({ tour }) => {
                 <Link href={`/admin/edit-tour/${id}`}>
                   <EditIcon />
                 </Link>
-                <DeleteIcon
+                <ArchiveIcon
                   style={{ cursor: "pointer" }}
-                  onClick={removeTour}
+                  onClick={archiveTour}
                 />
               </>
             )}
@@ -84,7 +87,7 @@ const ToursListItem = ({ tour }) => {
       </li>
       {isLoading && <AdminSpinner />}
       {isError && <p style={{ color: "red" }}>Произошла ошибка</p>}
-      {isSuccess && <p style={{ color: "green" }}>Тур удалён</p>}
+      {isSuccess && <p style={{ color: "green" }}>Тур заархивирован</p>}
     </>
   );
 };

@@ -13,7 +13,7 @@ import UserSpinner from "../loadingSpinners/UserSpinner";
 import SubmitWrapper from "../submitWrapper/SubmitWrapper";
 
 const ReviewForm = ({
-  setReviews,
+  invalidateReviews,
   review,
   tourId,
   setCanClose,
@@ -32,25 +32,23 @@ const ReviewForm = ({
   const trimmedText = text.trim();
 
   const createReview = async (body) => {
-    const res = await query(CREATE_REVIEW_API_ENDPOINT, {
+    await query(CREATE_REVIEW_API_ENDPOINT, {
       method: "POST",
       json: true,
       body: JSON.stringify(body),
     });
 
-    setReviews((reviews) => [res, ...reviews]);
+    invalidateReviews();
   };
 
   const updateReview = async (body) => {
-    const res = await query(UPDATE_REVIEW_API_ENDPOINT, {
+    await query(UPDATE_REVIEW_API_ENDPOINT, {
       method: "PATCH",
       json: true,
       body: JSON.stringify(body),
     });
 
-    setReviews((reviews) =>
-      reviews.map((item) => (res.id === item.id ? res : item)),
-    );
+    invalidateReviews();
   };
 
   const onSubmit = async (e) => {

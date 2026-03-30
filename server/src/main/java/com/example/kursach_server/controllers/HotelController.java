@@ -2,14 +2,18 @@ package com.example.kursach_server.controllers;
 
 import com.example.kursach_server.constants.Roles;
 import com.example.kursach_server.dto.hotel.CreateHotelDTO;
-import com.example.kursach_server.dto.hotel.HotelPreviewDTO;
+import com.example.kursach_server.dto.hotel.HotelLookupDTO;
+import com.example.kursach_server.dto.hotel.HotelResponseDTO;
+import com.example.kursach_server.dto.hotel.HotelTableDTO;
 import com.example.kursach_server.exceptions.conflict.EntityAlreadyExistsException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
+import com.example.kursach_server.exceptions.notFound.NotFoundException;
 import com.example.kursach_server.service.HotelService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -32,13 +36,27 @@ public class HotelController {
         return hotelService.createHotel(hotelDTO);
     }
 
-    @GetMapping("/getHotels/{country}")
-    public List<HotelPreviewDTO> getHotelsByCountry(@PathVariable @NotNull @NotBlank String country) {
+    @GetMapping("/{id}")
+    public HotelResponseDTO getHotelById(@PathVariable @NotNull UUID id) throws EntityNotFoundException {
+        return hotelService.getHotelById(id);
+    }
+
+    @PatchMapping("/{id}")
+    @RolesAllowed(Roles.ADMIN)
+    public HotelResponseDTO updateHotel(
+        @PathVariable @NotNull UUID id,
+        @Valid @ModelAttribute CreateHotelDTO hotelDTO
+    ) throws IOException, EntityNotFoundException {
+        return hotelService.updateHotel(id, hotelDTO);
+    }
+
+    @GetMapping("/get/{country}")
+    public List<HotelLookupDTO> getHotelsByCountry(@PathVariable @NotNull @NotBlank String country) {
         return hotelService.getHotelsByCountry(country);
     }
 
-    @GetMapping("/getHotels")
-    public List<HotelPreviewDTO> getHotelsByParams(
+    @GetMapping("/get")
+    public List<HotelLookupDTO> getHotelsByParams(
         @RequestParam @NotNull @NotBlank String country,
         @RequestParam(required = false) List<String> resorts,
         @RequestParam(required = false) List<String> nutrition,
@@ -48,5 +66,21 @@ public class HotelController {
         return hotelService.getHotelsByParams(
             country, resorts, nutrition, rooms, stars
         );
+    }
+
+    @GetMapping("/get/admin")
+    @RolesAllowed(Roles.ADMIN)
+    public Page<HotelTableDTO> getHotelsForAdminTable(
+        @Valid @RequestParam @NotNull String hotelTitle,
+        @RequestParam int page,
+        @RequestParam int pageSize
+    ) {
+        return hotelService.getHotelsForAdminTable(hotelTitle, page, pageSize);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @RolesAllowed(Roles.ADMIN)
+    public void deleteHotel(@Valid @PathVariable @NotNull UUID id) throws NotFoundException {
+        hotelService.deleteHotel(id);
     }
 }

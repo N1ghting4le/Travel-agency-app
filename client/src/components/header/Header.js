@@ -6,13 +6,14 @@ import Link from "next/link";
 import Logo from "../logo/Logo";
 import AccountMenu from "../accountMenu/AccountMenu";
 import HeaderMenu from "./menu/Menu";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "../globalContext/hooks/useUser";
 import useQuery from "@/hooks/query.hook";
 import useAuth from "@/hooks/auth.hook";
 import { useRouter, usePathname } from "next/navigation";
 
 const Header = () => {
+  const [isAuthorizing, setIsAuthorizing] = useState(true);
   const { user } = useUser();
   const { query } = useQuery();
   const { authorize, logout } = useAuth();
@@ -24,10 +25,17 @@ const Header = () => {
       return;
     }
 
-    query(AUTH_API_ENDPOINT).then(authorize).catch(logout);
+    query(AUTH_API_ENDPOINT)
+      .then(authorize)
+      .catch(logout)
+      .finally(() => setIsAuthorizing(false));
   }, [user, query, authorize, logout]);
 
   useEffect(() => {
+    if (isAuthorizing) {
+      return;
+    }
+
     const isRouteRestricted =
       (user?.role !== "EMPL" && pathname.includes("bookings/")) ||
       (user?.admin && pathname.includes("users/")) ||
@@ -36,7 +44,7 @@ const Header = () => {
     if (isRouteRestricted) {
       router.replace("/");
     }
-  }, [user, pathname, router]);
+  }, [isAuthorizing, user, pathname, router]);
 
   return (
     <header className={styles.header}>

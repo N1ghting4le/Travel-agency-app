@@ -9,7 +9,6 @@ import SubmitWrapper from "../submitWrapper/SubmitWrapper";
 import { useForm, Controller } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { useAdmin } from "../globalContext/hooks/useAdmin";
-import { useTours } from "../globalContext/hooks/useTours";
 import useQuery from "@/hooks/query.hook";
 import schema from "./schema";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -24,8 +23,7 @@ import {
 
 const TourForm = ResetHoc(({ tour, reset }) => {
   const { isAdmin } = useAdmin();
-  const { changeTour } = useTours();
-  const [hotels, setHotels] = useState(tour ? [tour.hotelTitle] : []);
+  const [hotels, setHotels] = useState(tour ? [tour.hotel] : []);
 
   const {
     control,
@@ -43,7 +41,7 @@ const TourForm = ResetHoc(({ tour, reset }) => {
       tourNotes: tour?.tourNotes || "",
       departureCity: tour?.departureCity || "",
       destinationCountry: tour?.destinationCountry || "",
-      hotelTitle: tour?.hotelTitle || "",
+      hotel: tour?.hotel || null,
       basePrice: tour?.basePrice || "",
     },
   });
@@ -74,20 +72,19 @@ const TourForm = ResetHoc(({ tour, reset }) => {
   };
 
   const updateTour = async (body, data) => {
-    const res = await tourMutation(UPDATE_TOUR_API_ENDPOINT, {
+    await tourMutation(UPDATE_TOUR_API_ENDPOINT, {
       method: "PATCH",
       json: true,
       body: JSON.stringify(body),
     });
-    changeTour(res);
     formReset(data);
   };
 
   const onSubmit = async (data) => {
-    const { hotelTitle, ...tourInfo } = data;
+    const { hotel, ...tourInfo } = data;
     const body = {
       id: tour?.id || null,
-      hotelId: tour ? null : hotels.find((h) => h.hotelTitle === hotelTitle).id,
+      hotelId: tour ? null : hotel.id,
       ...tourInfo,
     };
 
@@ -104,7 +101,7 @@ const TourForm = ResetHoc(({ tour, reset }) => {
 
   const handleCountryChange = () => {
     setHotels([]);
-    setValue("hotelTitle", "");
+    setValue("hotel", null);
   };
 
   if (!isAdmin) {
@@ -155,10 +152,11 @@ const TourForm = ResetHoc(({ tour, reset }) => {
       {(isSuccess || tour) && (
         <>
           <SelectMenu
-            values={hotels.map((hotel) => hotel.hotelTitle)}
-            name="hotelTitle"
+            values={hotels}
+            valueField="hotelTitle"
+            name="hotel"
             control={control}
-            error={errors.hotelTitle}
+            error={errors.hotel}
             disabled={!!tour}
           >
             Отель

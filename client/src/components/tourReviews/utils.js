@@ -11,6 +11,3 @@ export const reviewStr = (length) => {
 
   return `${length} отзыва`;
 };
-
-export const calculateAvgMark = (reviews) =>
-  reviews.reduce((sum, curr) => sum + curr.mark, 0) / (reviews.length || 1);

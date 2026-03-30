@@ -1,5 +1,6 @@
 import BookOnline from "@mui/icons-material/BookOnline";
 import Person from "@mui/icons-material/Person";
+import Analytics from "@mui/icons-material/Analytics";
 
 import { adminMenuItems } from "./constants";
 
@@ -24,13 +25,13 @@ export const getUserMenuItems = (isAdmin, id, role) => {
         text: "Новые бронирования",
       },
       {
-        href: `/bookings/${id}`,
+        href: "/bookings/taken",
         Icon: BookOnline,
         text: "Бронирования, с которыми вы работаете",
       },
       {
         href: "/bookings/analytics",
-        Icon: BookOnline,
+        Icon: Analytics,
         text: "Аналитика бронирований",
       },
     ];

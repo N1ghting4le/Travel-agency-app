@@ -2,10 +2,11 @@
 
 import styles from "./bookingsForEmployees.module.css";
 import {
-  GET_BOOKINGS_BY_DATE_RANGE_API_ENDPOINT,
+  GET_BOOKINGS_BY_PARAMS_API_ENDPOINT,
   takeBookingApiEndpoint,
+  changeBookingStatusApiEndpoint,
 } from "@/constants/queryPaths";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser } from "../globalContext/hooks/useUser";
 import useQuery from "@/hooks/query.hook";
 import TourLoading from "../loadingSpinners/TourLoading";
@@ -19,18 +20,33 @@ import schema from "./schema";
 import { minDate, maxDate } from "./constants";
 import FormDatePicker from "../formDatePicker/FormDatePicker";
 import SubmitBtn from "../submitBtn/SubmitBtn";
+import Input from "../input/Input";
+import { usePagination } from "@/hooks/pagination.hook";
+import { Pagination } from "../pagination";
+import { clearTimeoutAndRef } from "@/utils/clearTimeoutAndRef";
 import "dayjs/locale/ru";
 
-const NewBookings = () => {
+const EmployeeBookingsView = ({ areNewBookings }) => {
   const [bookings, setBookings] = useState([]);
-  const [takeId, setTakeId] = useState(null);
-  const { query, isLoading, isError, isSuccess } = useQuery();
-  const { query: take, queryState: takeState, resetQueryState } = useQuery();
+  const [activeBookingId, setActiveBookingId] = useState(null);
+  const updateBookingsTimeoutRef = useRef(null);
+  const resetStateTimeoutRef = useRef(null);
+  const {
+    page,
+    setPage,
+    pagination,
+    initialQuery,
+    paginatedQuery,
+    queryState: { isLoading, isError, isSuccess },
+    isInitialQueryExecuted,
+  } = usePagination();
+  const { query, queryState, resetQueryState } = useQuery();
   const { user } = useUser();
 
   const {
     handleSubmit,
     formState: { errors },
+    getValues,
     setValue,
     trigger,
     watch,
@@ -40,15 +56,19 @@ const NewBookings = () => {
     defaultValues: {
       startDate: maxDate,
       endDate: maxDate,
+      email: "",
+      phoneNumber: "",
     },
   });
 
   const { startDate, endDate } = watch();
 
-  const sendDateRange = async (data) => {
-    setBookings([]);
+  const sendParams = async (data) => {
+    if (!areNewBookings) {
+      data.employeeId = user.id;
+    }
 
-    const res = await query(GET_BOOKINGS_BY_DATE_RANGE_API_ENDPOINT, {
+    const res = await initialQuery(GET_BOOKINGS_BY_PARAMS_API_ENDPOINT, {
       method: "POST",
       body: JSON.stringify(data),
       json: true,
@@ -56,23 +76,54 @@ const NewBookings = () => {
     setBookings(res);
   };
 
+  const updateBookings = async () => {
+    const updatedBookings = await paginatedQuery();
+    setBookings(updatedBookings);
+  };
+
+  const resetActiveBookingAndQueryState = () => {
+    setActiveBookingId(null);
+    resetQueryState();
+  };
+
   useEffect(() => {
-    sendDateRange({ startDate, endDate });
+    sendParams(getValues());
   }, []);
 
+  useEffect(() => {
+    resetActiveBookingAndQueryState();
+    clearTimeoutAndRef(updateBookingsTimeoutRef);
+    clearTimeoutAndRef(resetStateTimeoutRef);
+
+    if (isInitialQueryExecuted) {
+      updateBookings();
+    }
+  }, [page]);
+
   const takeBooking = (id) => async () => {
-    setTakeId(id);
+    setActiveBookingId(id);
 
     try {
-      await take(takeBookingApiEndpoint(id), { method: "PATCH" });
-      setTimeout(() => {
-        setBookings((bookings) => bookings.filter((b) => b.booking.id !== id));
-      }, 2000);
+      await query(takeBookingApiEndpoint(id), { method: "PATCH" });
+      updateBookingsTimeoutRef.current = setTimeout(updateBookings, 2000);
     } finally {
-      setTimeout(() => {
-        setTakeId(null);
-        resetQueryState();
-      }, 2000);
+      resetStateTimeoutRef.current = setTimeout(
+        resetActiveBookingAndQueryState,
+        2000,
+      );
+    }
+  };
+
+  const changeStatus = (id, approve) => async () => {
+    setActiveBookingId(id);
+
+    try {
+      await query(changeBookingStatusApiEndpoint(id, approve), {
+        method: "PATCH",
+      });
+      updateBookings();
+    } finally {
+      resetActiveBookingAndQueryState();
     }
   };
 
@@ -83,6 +134,10 @@ const NewBookings = () => {
 
   const changeEndDate = (endDate) => {
     setValue("endDate", endDate, { shouldValidate: true });
+  };
+
+  const handleChange = (field) => (e) => {
+    setValue(field, e.target.value, { shouldValidate: true });
   };
 
   if (user?.role !== "EMPL") {
@@ -98,10 +153,7 @@ const NewBookings = () => {
           ruRU.components.MuiLocalizationProvider.defaultProps.localeText
         }
       >
-        <form
-          className={styles.datePickers}
-          onSubmit={handleSubmit(sendDateRange)}
-        >
+        <form className={styles.form} onSubmit={handleSubmit(sendParams)}>
           <div className={styles.calendarWrapper}>
             <p>От:</p>
             <FormDatePicker
@@ -124,6 +176,16 @@ const NewBookings = () => {
               onChange={changeEndDate}
             />
           </div>
+          <Input
+            name="email"
+            placeholder="Адрес эл. почты"
+            onChange={handleChange("email")}
+          />
+          <Input
+            name="phoneNumber"
+            placeholder="Номер телефона"
+            onChange={handleChange("phoneNumber")}
+          />
           <SubmitBtn
             style={{ alignSelf: "flex-end", height: 56, paddingInline: 16 }}
           >
@@ -136,15 +198,16 @@ const NewBookings = () => {
       {isSuccess && (
         <BookingsListForEmployees
           bookings={bookings}
-          activeId={takeId}
-          action={takeBooking}
-          queryState={takeState}
-          areNewBookings
-          emptyText="Нет новых бронирований в выбранные даты"
+          activeId={activeBookingId}
+          action={areNewBookings ? takeBooking : changeStatus}
+          queryState={queryState}
+          areNewBookings={areNewBookings}
+          emptyText="Нет бронирований по заданным параметрам"
         />
       )}
+      <Pagination {...{ page, setPage, pagination }} />
     </div>
   );
 };
 
-export default NewBookings;
+export default EmployeeBookingsView;

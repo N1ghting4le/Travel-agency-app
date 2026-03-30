@@ -1,46 +1,75 @@
 "use client";
 
-import { getReviewsByTourIdApiEndpoint } from "@/constants/queryPaths";
+import {
+  getReviewsByTourIdApiEndpoint,
+  getAvgMarkByTourIdApiEndpoint,
+} from "@/constants/queryPaths";
 import styles from "./tourReviews.module.css";
 import useQuery from "@/hooks/query.hook";
-import { useState, useEffect, useMemo } from "react";
+import { usePagination } from "@/hooks/pagination.hook";
+import { useState, useEffect } from "react";
 import { useAdmin } from "../globalContext/hooks/useAdmin";
 import { useUser } from "../globalContext/hooks/useUser";
-import { useTours } from "../globalContext/hooks/useTours";
 import { useRouter } from "next/navigation";
 import TourLoading from "../loadingSpinners/TourLoading";
 import ReviewModal from "../reviewModal/ReviewModal";
 import EditIcon from "@mui/icons-material/Edit";
-import { reviewStr, calculateAvgMark } from "./utils";
+import { Pagination } from "../pagination";
+import { reviewStr } from "./utils";
 
 const TourReviews = ({ id }) => {
   const [reviews, setReviews] = useState([]);
+  const [avgMark, setAvgMark] = useState(0);
+  const [reviewsAmount, setReviewsAmount] = useState(0);
   const [open, setOpen] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(null);
-  const { query, isLoading, isError } = useQuery();
+  const {
+    page,
+    setPage,
+    pagination,
+    initialQuery,
+    isInitialQueryExecuted,
+    paginatedQuery,
+    queryState: { isLoading, isError },
+  } = usePagination();
+  const { query } = useQuery();
   const { isAdmin } = useAdmin();
   const { user } = useUser();
-  const { changeAvgMark } = useTours();
   const router = useRouter();
 
-  const avgMark = useMemo(
-    () => Number(calculateAvgMark(reviews).toFixed(1)),
-    [reviews],
-  );
-
   const getReviews = async () => {
-    const res = await query(getReviewsByTourIdApiEndpoint(id));
-    setReviews(res);
+    if (isInitialQueryExecuted) {
+      const res = await paginatedQuery();
+      setReviews(res);
+    }
+  };
+
+  const getAvgMarkAndReviewsAmount = async () => {
+    const { avgMark, reviewsAmount } = await query(
+      getAvgMarkByTourIdApiEndpoint(id),
+      {
+        authorize: false,
+      },
+    );
+    setAvgMark(Number(avgMark.toFixed(1)));
+    setReviewsAmount(reviewsAmount);
+  };
+
+  const invalidateReviews = () => {
+    getReviews();
+    getAvgMarkAndReviewsAmount();
   };
 
   useEffect(() => {
-    getReviews();
+    initialQuery(getReviewsByTourIdApiEndpoint(id), { authorize: false }).then(
+      setReviews,
+    );
+    getAvgMarkAndReviewsAmount();
   }, []);
 
-  useEffect(
-    () => changeAvgMark(id, avgMark, reviews.length),
-    [id, avgMark, reviews.length, changeAvgMark],
-  );
+  useEffect(() => {
+    getReviews();
+  }, [page]);
 
   const openModal = () => {
     if (user) {
@@ -71,7 +100,7 @@ const TourReviews = ({ id }) => {
     );
   }
 
-  const str = reviewStr(reviews.length);
+  const str = reviewStr(reviewsAmount);
 
   return (
     <div>
@@ -91,42 +120,48 @@ const TourReviews = ({ id }) => {
         <ReviewModal
           open={open}
           setOpen={setOpen}
-          setReviews={setReviews}
+          invalidateReviews={invalidateReviews}
           review={reviews[reviewIndex]}
           setReviewIndex={setReviewIndex}
           tourId={id}
         />
       </div>
-      <ul className={styles.reviewsList}>
-        {reviews.map(
-          ({ id, userId, name, surname, mark, reviewText, reviewDate }, i) => {
-            const dateStr = new Date(reviewDate).toLocaleDateString("ru-RU");
+      <div className={styles.reviewsListAndPagination}>
+        <ul className={styles.reviewsList}>
+          {reviews.map(
+            (
+              { id, userId, name, surname, mark, reviewText, reviewDate },
+              i,
+            ) => {
+              const dateStr = new Date(reviewDate).toLocaleDateString("ru-RU");
 
-            return (
-              <li key={id} className={styles.review}>
-                <div className={styles.reviewMain}>
-                  <p style={{ fontWeight: 600 }}>{mark}</p>
-                  <div className={styles.vertical} />
-                  <p>
-                    {name} {surname}
-                  </p>
-                  <div className={styles.vertical} />
-                  <p>{dateStr}</p>
-                  <EditIcon
-                    style={{
-                      display: user?.id === userId ? "block" : "none",
-                      cursor: "pointer",
-                    }}
-                    onClick={openModalForEdit(i)}
-                    fontSize="small"
-                  />
-                </div>
-                <p style={{ marginTop: "10px" }}>{reviewText}</p>
-              </li>
-            );
-          },
-        )}
-      </ul>
+              return (
+                <li key={id} className={styles.review}>
+                  <div className={styles.reviewMain}>
+                    <p style={{ fontWeight: 600 }}>{mark}</p>
+                    <div className={styles.vertical} />
+                    <p>
+                      {name} {surname}
+                    </p>
+                    <div className={styles.vertical} />
+                    <p>{dateStr}</p>
+                    <EditIcon
+                      style={{
+                        display: user?.id === userId ? "block" : "none",
+                        cursor: "pointer",
+                      }}
+                      onClick={openModalForEdit(i)}
+                      fontSize="small"
+                    />
+                  </div>
+                  <p style={{ marginTop: "10px" }}>{reviewText}</p>
+                </li>
+              );
+            },
+          )}
+        </ul>
+        <Pagination {...{ page, setPage, pagination }} />
+      </div>
     </div>
   );
 };

@@ -3,6 +3,10 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import styles from "./styles.module.css";
 
 export function Pagination({ page, setPage, pagination }) {
+  if (pagination.totalPages === 0) {
+    return null;
+  }
+
   const handleNextPage = () => {
     setPage((prevPage) => prevPage + 1);
   };

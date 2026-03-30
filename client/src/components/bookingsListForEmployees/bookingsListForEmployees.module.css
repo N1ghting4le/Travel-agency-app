@@ -17,6 +17,10 @@
     cursor: pointer;
 }
 
+.btn:disabled {
+    cursor: not-allowed;
+}
+
 .btnWrapper {
     margin-left: auto;
     display: flex;

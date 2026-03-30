@@ -3,7 +3,9 @@ package com.example.kursach_server.utils;
 import com.example.kursach_server.constants.BookingStatuses;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.io.File;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class Utils {
@@ -28,12 +30,22 @@ public class Utils {
     }
 
     public static <T> boolean listAndArrayEmptyOrIntersect(List<T> list, T[] array) {
-        return (
-            list == null ||
-            list.isEmpty() ||
-            array == null ||
-            array.length == 0 ||
-            Arrays.stream(array).anyMatch(list::contains)
-        );
+        if (list == null || list.isEmpty() || array == null || array.length == 0) {
+            return true;
+        }
+
+        HashSet<T> set = new HashSet<>(list);
+
+        return Arrays.stream(array).anyMatch(set::contains);
+    }
+
+    public static void deleteDirectory(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                deleteDirectory(f);
+            }
+        }
+        file.delete();
     }
 }

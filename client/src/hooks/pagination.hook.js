@@ -8,6 +8,7 @@ export const usePagination = () => {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pagination, setPagination] = useState(initialPagination);
   const paginatedQueryArgumentsRef = useRef(null);
+  const initialQueryExecutedRef = useRef(false);
 
   const { query, ...rest } = useQuery();
 
@@ -49,10 +50,17 @@ export const usePagination = () => {
       });
 
       paginatedQueryArgumentsRef.current = [url, settings, additionalParams];
+      initialQueryExecutedRef.current = false;
       setPage(0);
       setPagination(initialPagination);
 
-      return await performQuery(url, queryParams, settings);
+      try {
+        return await performQuery(url, queryParams, settings);
+      } catch (e) {
+        throw e;
+      } finally {
+        initialQueryExecutedRef.current = true;
+      }
     },
     [pageSize, performQuery],
   );
@@ -88,6 +96,7 @@ export const usePagination = () => {
     setPageSize: changePageSize,
     pagination,
     initialQuery,
+    isInitialQueryExecuted: initialQueryExecutedRef.current,
     paginatedQuery,
     queryState: rest,
     paginatedQueryArgumentsRef,

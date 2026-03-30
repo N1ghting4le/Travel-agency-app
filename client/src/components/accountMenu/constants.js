@@ -42,9 +42,19 @@ export const adminMenuItems = [
     text: "Добавить отель",
   },
   {
+    href: "/admin/hotels",
+    Icon: Apartment,
+    text: "Отели",
+  },
+  {
     href: "/admin/add-tour",
     Icon: Luggage,
     text: "Добавить тур",
+  },
+  {
+    href: "/admin/tours",
+    Icon: Luggage,
+    text: "Туры",
   },
   {
     href: "/admin/add-resort",

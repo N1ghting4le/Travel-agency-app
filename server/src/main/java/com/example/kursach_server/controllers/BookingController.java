@@ -6,12 +6,13 @@ import com.example.kursach_server.exceptions.conflict.BookingAlreadyTakenExcepti
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.exceptions.conflict.UnavailableTourException;
-import com.example.kursach_server.requests.DateRangeRequest;
+import com.example.kursach_server.requests.BookingsRequest;
 import com.example.kursach_server.service.BookingService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,10 +41,14 @@ public class BookingController {
         return bookingService.getUserBookings(userId);
     }
 
-    @PostMapping("/getByDateRange")
+    @PostMapping("/getByParams")
     @RolesAllowed(Roles.EMPLOYEE)
-    public List<BookingWithUserInfoResponseDTO> getBookingsInDateRange(@Valid @RequestBody DateRangeRequest dateRange) {
-        return bookingService.getBookingsInDateRange(dateRange.getStartDate(), dateRange.getEndDate());
+    public Page<BookingWithUserInfoResponseDTO> getBookingsByParams(
+        @Valid @RequestBody BookingsRequest bookingsRequest,
+        @RequestParam int page,
+        @RequestParam int pageSize
+    ) {
+        return bookingService.getBookingsByParams(bookingsRequest, page, pageSize);
     }
 
     @PatchMapping("/take/{id}")
@@ -58,13 +63,6 @@ public class BookingController {
     public void changeStatus(@Valid @PathVariable @NotNull UUID id, @PathVariable @NotNull String action)
         throws EntityNotFoundException {
         bookingService.changeStatus(id, action);
-    }
-
-    @GetMapping("/getTaken/{employeeId}")
-    public List<BookingWithUserInfoResponseDTO> getBookingsTakenByEmployee(
-        @Valid @PathVariable @NotNull UUID employeeId
-    ) {
-        return bookingService.getBookingsTakenByEmployee(employeeId);
     }
 
     @GetMapping("/charts/costs")

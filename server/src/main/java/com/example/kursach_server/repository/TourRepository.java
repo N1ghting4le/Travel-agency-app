@@ -1,6 +1,8 @@
 package com.example.kursach_server.repository;
 
 import com.example.kursach_server.models.Tour;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,7 +17,8 @@ public interface TourRepository extends JpaRepository<Tour, UUID> {
         "SELECT tour FROM Tour tour WHERE tour.departureCity = :departureCity " +
         "AND tour.destinationCountry = :destinationCountry " +
         "AND tour.hotel.stars >= :hotelStars " +
-        "AND (tour.delete IS NULL OR tour.delete = false)"
+        "AND (tour.delete IS NULL OR tour.delete = FALSE) " +
+        "ORDER BY tour.basePrice ASC"
     )
     List<Tour> findByCriteria(
         @Param("departureCity") String departureCity,
@@ -23,7 +26,17 @@ public interface TourRepository extends JpaRepository<Tour, UUID> {
         @Param("hotelStars") Integer hotelStars
     );
 
-    List<Tour> findByDeleteIsTrue();
+    @Query(
+        value = "SELECT tour FROM Tour tour WHERE LOWER(tour.tourTitle) LIKE %:tourTitle% " +
+        "AND (:includeArchived = TRUE OR tour.delete IS NULL OR tour.delete = FALSE)",
+        countQuery = "SELECT COUNT(tour) FROM Tour tour WHERE LOWER(tour.tourTitle) LIKE %:tourTitle% " +
+        "AND (:includeArchived = TRUE OR tour.delete IS NULL OR tour.delete = FALSE)"
+    )
+    Page<Tour> findByCriteria(
+        @Param("tourTitle") String tourTitle,
+        @Param("includeArchived") boolean includeArchived,
+        Pageable pageable
+    );
 
     @Query(
         value = "SELECT t.id, " +

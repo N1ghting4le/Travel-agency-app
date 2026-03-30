@@ -2,14 +2,14 @@
 
 import styles from "./photos.module.css";
 import { helperStyle } from "../input/Input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFieldArray, Controller } from "react-hook-form";
 import { Button, FormHelperText } from "@mui/material";
 import { CloudUpload } from "@mui/icons-material";
 import Image from "next/image";
 import { photoFormats } from "./constants";
 
-const Photos = ({ control, trigger, error }) => {
+const Photos = ({ control, trigger, error, externalPreviews }) => {
   const [previews, setPreviews] = useState([]);
   const [loadError, setLoadError] = useState(false);
 
@@ -17,6 +17,10 @@ const Photos = ({ control, trigger, error }) => {
     control,
     name: "photos",
   });
+
+  useEffect(() => {
+    setPreviews(externalPreviews);
+  }, [externalPreviews]);
 
   const handleUploadedPhoto = (e) => {
     const addedPhotos = [];

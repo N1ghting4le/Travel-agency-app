@@ -1,3 +1,5 @@
+import { createOrderWeights } from "@/utils/createOrderWeights";
+
 const nutritionTypes = [
   {
     value: "RO",
@@ -22,3 +24,8 @@ const nutritionTypes = [
 ];
 
 export default nutritionTypes;
+
+export const nutritionOrderWeights = createOrderWeights(
+  nutritionTypes,
+  "value",
+);

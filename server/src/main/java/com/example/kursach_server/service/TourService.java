@@ -2,20 +2,14 @@ package com.example.kursach_server.service;
 
 import com.example.kursach_server.dto.PageDto;
 import com.example.kursach_server.dto.booking.TourStatsDTO;
-import com.example.kursach_server.dto.tour.CreateTourDTO;
-import com.example.kursach_server.dto.tour.TourResponseDTO;
-import com.example.kursach_server.dto.tour.TourPreviewDTO;
-import com.example.kursach_server.dto.tour.UpdateTourDTO;
+import com.example.kursach_server.dto.tour.*;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.models.Hotel;
 import com.example.kursach_server.models.Tour;
 import com.example.kursach_server.repository.HotelRepository;
 import com.example.kursach_server.requests.TourParamsRequest;
 import com.example.kursach_server.utils.Utils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import com.example.kursach_server.repository.TourRepository;
 
@@ -63,6 +57,13 @@ public class TourService {
         return new PageDto<>(responsePage);
     }
 
+    public Page<TourTableDTO> getToursForAdminTable(
+        String tourTitle, boolean includeArchived, int page, int pageSize
+    ) {
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("tourTitle").ascending());
+        return tourRepository.findByCriteria(tourTitle, includeArchived, pageable).map(TourTableDTO::new);
+    }
+
     public UUID createTour(CreateTourDTO createTourDTO) throws EntityNotFoundException {
         Hotel hotel = hotelRepository.findById(createTourDTO.getHotelId())
             .orElseThrow(() -> new EntityNotFoundException("Отель не найден"));
@@ -76,8 +77,7 @@ public class TourService {
     }
 
     public UpdateTourDTO updateTour(UpdateTourDTO updateTourDTO) throws EntityNotFoundException {
-        Tour tour = tourRepository.findById(updateTourDTO.getId())
-            .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
+        Tour tour = findTourById(updateTourDTO.getId());
 
         tour.setTourTitle(updateTourDTO.getTourTitle());
         tour.setTourDescr(updateTourDTO.getTourDescr());
@@ -88,19 +88,28 @@ public class TourService {
         return updateTourDTO;
     }
 
-    public void markTourForRemoval(UUID id) throws EntityNotFoundException {
-        Tour tour = tourRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
-
+    public void archiveTour(UUID id) throws EntityNotFoundException {
+        Tour tour = findTourById(id);
         tour.setDelete(true);
         tourRepository.save(tour);
     }
 
-    public TourResponseDTO getTour(UUID id) throws EntityNotFoundException {
-        Tour tour = tourRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
+    public void restoreTour(UUID id) throws EntityNotFoundException {
+        Tour tour = findTourById(id);
+        tour.setDelete(false);
+        tourRepository.save(tour);
+    }
 
-        return new TourResponseDTO(tour);
+    public void deleteTour(UUID id) throws EntityNotFoundException {
+        tourRepository.delete(findTourById(id));
+    }
+
+    public TourResponseDTO getTour(UUID id) throws EntityNotFoundException {
+        return new TourResponseDTO(findTourById(id));
+    }
+
+    private Tour findTourById(UUID id) throws EntityNotFoundException {
+        return tourRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
     }
 
     public Page<TourStatsDTO> getTourStats(Integer year, Integer month, String country, int page, int pageSize) {

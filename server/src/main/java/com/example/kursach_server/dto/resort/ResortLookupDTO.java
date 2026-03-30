@@ -9,9 +9,11 @@ import java.util.UUID;
 public class ResortLookupDTO {
     private final UUID id;
     private final String resortTitle;
+    private final String resortCountry;
 
     public ResortLookupDTO(Resort resort) {
         id = resort.getId();
         resortTitle = resort.getResortTitle();
+        resortCountry = resort.getResortCountry();
     }
 }

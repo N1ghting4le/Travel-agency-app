@@ -5,14 +5,9 @@
     gap: 30px;
 }
 
-.datePickers {
-    display: flex;
-    gap: 50px;
-}
-
-.calendarWrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 350px;
+.form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) 0.5fr;
+    gap: 20px;
+    align-items: flex-end;
 }

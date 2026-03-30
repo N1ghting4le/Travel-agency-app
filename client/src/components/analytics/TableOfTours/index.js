@@ -2,20 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import useQuery from "@/hooks/query.hook";
-import { getTourStatsApiEndpoint } from "@/constants/queryPaths";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-} from "@tanstack/react-table";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import { getQueryParams } from "@/utils/getQueryParams";
-
-import styles from "./styles.module.css";
-import { set } from "react-hook-form";
-
-const pageSize = 25;
+import { GET_TOUR_STATS_API_ENDPOINT } from "@/constants/queryPaths";
+import { usePagination } from "@/hooks/pagination.hook";
+import { Table } from "@/components/table";
+import styles from "@/components/table/styles.module.css";
 
 const columns = [
   {
@@ -44,119 +34,32 @@ const columns = [
 
 export function TableOfTours({ year, month, country }) {
   const [tours, setTours] = useState([]);
-  const [page, setPage] = useState(0);
-  const [pagination, setPagination] = useState({
-    numberOfElements: 0,
-    offset: 0,
-    totalPages: 0,
-    totalElements: 0,
-    last: true,
-  });
-  const { query } = useQuery();
+  const {
+    page,
+    setPage,
+    pagination,
+    initialQuery,
+    paginatedQuery,
+    isInitialQueryExecuted,
+  } = usePagination();
 
   useEffect(() => {
-    const params = getQueryParams({
-      year,
-      month,
-      country,
-      page,
-      pageSize,
-    });
+    initialQuery(
+      GET_TOUR_STATS_API_ENDPOINT,
+      {},
+      {
+        year,
+        month,
+        country,
+      },
+    ).then(setTours);
+  }, [year, month, country]);
 
-    query(getTourStatsApiEndpoint(params)).then((res) => {
-      const {
-        content,
-        pageable: { offset },
-        totalElements,
-        totalPages,
-        last,
-        numberOfElements,
-      } = res;
+  useEffect(() => {
+    if (isInitialQueryExecuted) {
+      paginatedQuery().then(setTours);
+    }
+  }, [page]);
 
-      setTours(content);
-      setPagination({
-        offset,
-        totalElements,
-        totalPages,
-        last,
-        numberOfElements,
-      });
-    });
-  }, [year, month, country, page, query]);
-
-  const table = useReactTable({
-    data: tours,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const handleNextPage = () => {
-    setPage((prevPage) => prevPage + 1);
-  };
-
-  const handlePrevPage = () => {
-    setPage((prevPage) => prevPage - 1);
-  };
-
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    className={styles.tableHeader}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className={styles.tableRow}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className={styles.tableCell}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className={styles.pagination}>
-        <button
-          onClick={handlePrevPage}
-          disabled={page === 0}
-          className={styles.btn}
-        >
-          <ChevronLeft />
-        </button>
-        <span>
-          {page + 1} из {pagination.totalPages}
-        </span>
-        <button
-          onClick={handleNextPage}
-          disabled={page === pagination.totalPages - 1}
-          className={styles.btn}
-        >
-          <ChevronRight />
-        </button>
-        <p>
-          элементы {pagination.offset + 1} -{" "}
-          {pagination.offset + pagination.numberOfElements} из{" "}
-          {pagination.totalElements}
-        </p>
-      </div>
-    </div>
-  );
+  return <Table data={tours} {...{ columns, page, setPage, pagination }} />;
 }

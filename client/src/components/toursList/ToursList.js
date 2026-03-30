@@ -7,8 +7,8 @@ import ToursListItem from "../toursListItem/ToursListItem";
 import TourLoading from "../loadingSpinners/TourLoading";
 import { Checkbox, FormControlLabel, Slider } from "@mui/material";
 import { Pagination } from "../pagination";
-import { useState, useEffect } from "react";
-import { useTours } from "../globalContext/hooks/useTours";
+import { useState, useEffect, useRef } from "react";
+import { useToursSearchParamsRef } from "../globalContext/hooks/useToursSearchParamsRef";
 import icon from "../../public/landing_icon.png";
 import nutritionTypes from "@/lists/nutritionTypes";
 import roomTypes from "@/lists/roomTypes";
@@ -21,6 +21,7 @@ import {
   sliderStyle,
 } from "./constants";
 import { filterTours } from "./utils";
+import { clearTimeoutAndRef } from "@/utils/clearTimeoutAndRef";
 
 const ToursList = ({
   isLoading,
@@ -31,8 +32,10 @@ const ToursList = ({
   setPageSize,
   pagination,
   paginatedQuery,
+  tours,
+  setTours,
 }) => {
-  const { tours, setTours, toursSearchParamsRef } = useTours();
+  const { toursSearchParamsRef } = useToursSearchParamsRef();
   const [priceRange, setPriceRange] = useState([MIN_PRICE, MAX_PRICE]);
   const [minRating, setMinRating] = useState(0);
   const [activeNutrTypes, setActiveNutrTypes] = useState(
@@ -41,14 +44,22 @@ const ToursList = ({
   const [activeRoomTypes, setActiveRoomTypes] = useState(
     roomTypes.map((type) => type.value),
   );
+  const invalidateToursTimeoutRef = useRef(null);
+  const resetQueryStateTimeoutRef = useRef(null);
+
+  const fetchPage = async () => {
+    const res = await paginatedQuery();
+
+    if (res) {
+      setTours(res);
+    }
+  };
 
   useEffect(() => {
-    paginatedQuery().then((res) => {
-      if (res) {
-        setTours(res);
-      }
-    });
-  }, [paginatedQuery, setTours]);
+    clearTimeoutAndRef(invalidateToursTimeoutRef);
+    clearTimeoutAndRef(resetQueryStateTimeoutRef);
+    fetchPage();
+  }, [page, pageSize]);
 
   useEffect(() => {
     toursSearchParamsRef.current.page = page;
@@ -185,7 +196,11 @@ const ToursList = ({
       <div className={styles.toursListAndPagination}>
         <ul className={styles.toursList}>
           {filteredTours.map((tour) => (
-            <ToursListItem key={tour.id} tour={tour} />
+            <ToursListItem
+              key={tour.id}
+              tour={tour}
+              invalidateTours={fetchPage}
+            />
           ))}
         </ul>
         <Pagination {...{ page, setPage, pagination }} />

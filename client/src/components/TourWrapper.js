@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import TourSearchPanel from "./tourSearchPanel/TourSearchPanel";
 import ToursList from "./toursList/ToursList";
 import { usePagination } from "@/hooks/pagination.hook";
 
 const TourWrapper = () => {
+  const [tours, setTours] = useState([]);
   const {
     page,
     setPage,
@@ -21,7 +23,7 @@ const TourWrapper = () => {
     <>
       <TourSearchPanel
         query={initialQuery}
-        {...{ paginatedQueryArgumentsRef }}
+        {...{ paginatedQueryArgumentsRef, setTours }}
       />
       <ToursList
         {...{
@@ -33,6 +35,8 @@ const TourWrapper = () => {
           setPageSize,
           pagination,
           paginatedQuery,
+          tours,
+          setTours,
         }}
       />
     </>

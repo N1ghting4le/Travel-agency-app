@@ -11,13 +11,11 @@ const schema = object().shape({
     ]),
   ),
   country: string().required("Вы не выбрали страну"),
-  resort: string().required("Вы не выбрали курорт"),
-  nutritionTypes: array()
-    .compact()
-    .min(1, "Должен быть выбран хотя бы один тип питания"),
-  roomTypes: array()
-    .compact()
-    .min(1, "Должен быть выбран хотя бы один тип номеров"),
+  resort: object()
+    .nonNullable("Вы не выбрали курорт")
+    .required("Вы не выбрали курорт"),
+  nutritionTypes: array().min(1, "Должен быть выбран хотя бы один тип питания"),
+  roomTypes: array().min(1, "Должен быть выбран хотя бы один тип номеров"),
   photos: array().min(5, "Должно быть загружено не менее 5 фотографий"),
 });
 

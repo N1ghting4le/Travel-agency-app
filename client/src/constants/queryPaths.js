@@ -2,14 +2,11 @@ export const BASE_URL = "http://localhost:8080";
 
 export const getTourByIdApiEndpoint = (id) => `${BASE_URL}/tour/get/${id}`;
 
-export const getTakenBookingsByEmployeeIdApiEndpoint = (id) =>
-  `${BASE_URL}/booking/getTaken/${id}`;
-
 export const getBookingsByClientIdApiEndpoint = (id) =>
   `${BASE_URL}/booking/get/${id}`;
 
 export const CREATE_BOOKING_API_ENDPOINT = `${BASE_URL}/booking/create`;
-export const GET_BOOKINGS_BY_DATE_RANGE_API_ENDPOINT = `${BASE_URL}/booking/getByDateRange`;
+export const GET_BOOKINGS_BY_PARAMS_API_ENDPOINT = `${BASE_URL}/booking/getByParams`;
 
 export const takeBookingApiEndpoint = (id) => `${BASE_URL}/booking/take/${id}`;
 
@@ -18,9 +15,11 @@ export const AUTH_API_ENDPOINT = `${BASE_URL}/user/auth`;
 export const getResortsByCountryApiEndpoint = (country) =>
   `${BASE_URL}/resort/get/${country}`;
 export const getHotelsByCountryEndpoint = (country) =>
-  `${BASE_URL}/hotel/getHotels/${country}`;
+  `${BASE_URL}/hotel/get/${country}`;
 export const getHotelsByParamsEndpoint = (params) =>
-  `${BASE_URL}/hotel/getHotels?${params}`;
+  `${BASE_URL}/hotel/get?${params}`;
+
+export const getHotelByIdApiEndpoint = (id) => `${BASE_URL}/hotel/${id}`;
 
 export const CREATE_HOTEL_API_ENDPOINT = `${BASE_URL}/hotel/create`;
 
@@ -31,6 +30,8 @@ export const UPDATE_REVIEW_API_ENDPOINT = `${BASE_URL}/review/update`;
 
 export const getReviewsByTourIdApiEndpoint = (id) =>
   `${BASE_URL}/review/get/${id}`;
+export const getAvgMarkByTourIdApiEndpoint = (id) =>
+  `${BASE_URL}/review/get/${id}/avg`;
 
 export const SIGN_IN_API_ENDPOINT = `${BASE_URL}/user/signIn`;
 export const SIGN_UP_API_ENDPOINT = `${BASE_URL}/user/signUp`;
@@ -42,6 +43,8 @@ export const CREATE_TOUR_API_ENDPOINT = `${BASE_URL}/tour/create`;
 export const UPDATE_TOUR_API_ENDPOINT = `${BASE_URL}/tour/update`;
 export const GET_TOURS_API_ENDPOINT = `${BASE_URL}/tour/getTours`;
 
+export const archiveTourApiEndpoint = (id) => `${BASE_URL}/tour/archive/${id}`;
+export const restoreTourApiEndpoint = (id) => `${BASE_URL}/tour/restore/${id}`;
 export const deleteTourApiEndpoint = (id) => `${BASE_URL}/tour/delete/${id}`;
 
 export const getBookingCostsApiEndpoint = (params) =>
@@ -51,5 +54,8 @@ export const getBookingAmountsApiEndpoint = (params) =>
 export const getBookingSummaryApiEndpoint = (params) =>
   `${BASE_URL}/booking/summary?${params}`;
 
-export const getTourStatsApiEndpoint = (params) =>
-  `${BASE_URL}/tour/stats?${params}`;
+export const GET_TOUR_STATS_API_ENDPOINT = `${BASE_URL}/tour/stats`;
+export const GET_TOURS_ADMIN_API_ENDPOINT = `${BASE_URL}/tour/get/admin`;
+
+export const GET_HOTELS_ADMIN_API_ENDPOINT = `${BASE_URL}/hotel/get/admin`;
+export const deleteHotelApiEndpoint = (id) => `${BASE_URL}/hotel/delete/${id}`;

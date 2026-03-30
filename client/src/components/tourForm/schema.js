@@ -10,7 +10,9 @@ const schema = object().shape({
   ),
   departureCity: string().required("Вы не выбрали город"),
   destinationCountry: string().required("Вы не выбрали страну"),
-  hotelTitle: string().required("Вы не выбрали отель"),
+  hotel: object()
+    .nonNullable("Вы не выбрали отель")
+    .required("Вы не выбрали отель"),
   basePrice: number()
     .typeError("Вы не установили начальную цену")
     .min(50, "Минимальная цена - 50$")

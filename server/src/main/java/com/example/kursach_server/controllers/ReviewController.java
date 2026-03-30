@@ -1,6 +1,7 @@
 package com.example.kursach_server.controllers;
 
 import com.example.kursach_server.constants.Roles;
+import com.example.kursach_server.dto.review.AvgMarkAndReviewsAmountResponseDTO;
 import com.example.kursach_server.dto.review.CreateReviewDTO;
 import com.example.kursach_server.dto.review.ReviewResponseDTO;
 import com.example.kursach_server.dto.review.UpdateReviewDTO;
@@ -13,9 +14,9 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,8 +29,17 @@ public class ReviewController {
     }
 
     @GetMapping("/get/{id}")
-    public List<ReviewResponseDTO> getTourReviews(@Valid @PathVariable @NotNull UUID id) {
-        return reviewService.getTourReviews(id);
+    public Page<ReviewResponseDTO> getTourReviews(
+        @Valid @PathVariable @NotNull UUID id,
+        @RequestParam int page,
+        @RequestParam int pageSize
+    ) {
+        return reviewService.getTourReviews(id, page, pageSize);
+    }
+
+    @GetMapping("/get/{id}/avg")
+    public AvgMarkAndReviewsAmountResponseDTO getAvgMark(@Valid @PathVariable @NotNull UUID id) {
+        return reviewService.getAvgMarkAndReviewsAmount(id);
     }
 
     @PostMapping("/create")

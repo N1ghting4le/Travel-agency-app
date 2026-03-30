@@ -1,6 +1,7 @@
 package com.example.kursach_server.service;
 
 import com.example.kursach_server.constants.BookingStatuses;
+import com.example.kursach_server.constants.Time;
 import com.example.kursach_server.dto.booking.*;
 import com.example.kursach_server.exceptions.conflict.BookingAlreadyTakenException;
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
@@ -12,8 +13,15 @@ import com.example.kursach_server.models.User;
 import com.example.kursach_server.repository.BookingRepository;
 import com.example.kursach_server.repository.TourRepository;
 import com.example.kursach_server.repository.UserRepository;
+import com.example.kursach_server.requests.BookingsRequest;
 import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -44,7 +52,7 @@ public class BookingService {
         Tour tour = tourRepository.findById(createBookingDTO.getTourId())
             .orElseThrow(() -> new EntityNotFoundException("Тур не найден"));
 
-        if (tour.getDelete()) {
+        if (tour.getDelete() != null && tour.getDelete()) {
             throw new UnavailableTourException("Тур больше не доступен");
         }
 
@@ -69,14 +77,37 @@ public class BookingService {
     }
 
     public List<BookingResponseDTO> getUserBookings(UUID userId) {
-        return bookingRepository.findByUserId(userId).stream().map(BookingResponseDTO::new).toList();
+        return bookingRepository.findByUserIdOrderByBookingDateDesc(userId)
+            .stream().map(BookingResponseDTO::new).toList();
     }
 
-    public List<BookingWithUserInfoResponseDTO> getBookingsInDateRange(Date startDate, Date endDate) {
-        return bookingRepository.findByBookingDateBetweenAndEmployeeIsNullOrderByBookingDateAsc(
-            startDate,
-            endDate
-        ).stream().map(BookingWithUserInfoResponseDTO::new).toList();
+    public Page<BookingWithUserInfoResponseDTO> getBookingsByParams(
+        BookingsRequest bookingsRequest, int page, int pageSize
+    ) {
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("bookingDate").ascending());
+        Page<Booking> bookings;
+
+        if (bookingsRequest.getEmployeeId() == null) {
+            bookings = bookingRepository.findNewBookingsByParams(
+                bookingsRequest.getStartDate(),
+                bookingsRequest.getEndDate(),
+                bookingsRequest.getEmail(),
+                bookingsRequest.getPhoneNumber(),
+                pageable
+            );
+        } else {
+            bookings = bookingRepository.findTakenByParams(
+                new Date(),
+                bookingsRequest.getStartDate(),
+                bookingsRequest.getEndDate(),
+                bookingsRequest.getEmail(),
+                bookingsRequest.getPhoneNumber(),
+                bookingsRequest.getEmployeeId(),
+                pageable
+            );
+        }
+
+        return bookings.map(BookingWithUserInfoResponseDTO::new);
     }
 
     public void takeBooking(UUID bookingId, HttpServletRequest request)
@@ -106,9 +137,14 @@ public class BookingService {
         bookingRepository.save(booking);
     }
 
-    public List<BookingWithUserInfoResponseDTO> getBookingsTakenByEmployee(UUID employeeId) {
-        return bookingRepository
-            .findByEmployeeId(employeeId).stream().map(BookingWithUserInfoResponseDTO::new).toList();
+    @Scheduled(fixedRate = Time.MS_IN_DAY)
+    @Transactional
+    public void deleteBookings() {
+        Date today = new Date();
+
+        bookingRepository.rejectExpiredBookings(today);
+        bookingRepository.startApprovedBookings(today);
+        bookingRepository.completeStartedBookings(today);
     }
 
     public Object getBookingStats(Integer year, Integer month, String country) {

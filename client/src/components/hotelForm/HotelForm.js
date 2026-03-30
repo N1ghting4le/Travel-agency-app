@@ -3,6 +3,7 @@
 import {
   getResortsByCountryApiEndpoint,
   CREATE_HOTEL_API_ENDPOINT,
+  getHotelByIdApiEndpoint,
 } from "@/constants/queryPaths";
 import styles from "./hotelForm.module.css";
 import { helperStyle } from "../input/Input";
@@ -21,71 +22,142 @@ import useQuery from "@/hooks/query.hook";
 import schema from "./schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { textFields, largeTextFields } from "./fields";
-import nutritionTypes from "@/lists/nutritionTypes";
-import roomTypes from "@/lists/roomTypes";
+import nutritionTypes, { nutritionOrderWeights } from "@/lists/nutritionTypes";
+import roomTypes, { roomOrderWeights } from "@/lists/roomTypes";
 import countries from "@/lists/countries";
+import { getPhotoSrc } from "@/app/(regularUser)/tours/[id]/utils";
+import { sortByOrderWeights } from "@/utils/sortByOrderWeights";
 
-const HotelForm = ResetHoc(({ reset }) => {
+const HotelForm = ResetHoc(({ hotel, reset }) => {
   const { isAdmin } = useAdmin();
-  const [stars, setStars] = useState(1);
-  const [resorts, setResorts] = useState([]);
+  const [stars, setStars] = useState(hotel?.stars || 1);
+  const [resorts, setResorts] = useState(hotel ? [hotel.resort] : []);
+  const [initialPreviews, setInitialPreviews] = useState([]);
 
   const {
-    register,
     control,
     trigger,
     handleSubmit,
     formState: { errors },
     watch,
+    getValues,
     setValue,
+    reset: formReset,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      nutritionTypes: [],
-      roomTypes: [],
-      country: "",
-      resort: "",
+      title: hotel?.hotelTitle || "",
+      address: hotel?.address || "",
+      descr: hotel?.hotelDescr || "",
+      notes: hotel?.hotelNotes || "",
+      nutritionTypes: hotel?.nutritionTypes || [],
+      roomTypes: hotel?.roomTypes || [],
+      country: hotel?.resort.resortCountry || "",
+      resort: hotel?.resort || null,
+      photos: [],
     },
     mode: "onChange",
   });
+
+  const setHotelPhotos = async () => {
+    if (hotel) {
+      const {
+        photos,
+        hotelTitle,
+        resort: { resortTitle, resortCountry },
+      } = hotel;
+      const blobs = [];
+
+      for (let i = 0; i < photos.length; i++) {
+        try {
+          const res = await fetch(
+            getPhotoSrc(resortCountry, resortTitle, hotelTitle, photos[i]),
+          );
+          const blob = await res.blob();
+          blobs.push(blob);
+        } catch (e) {
+          console.error("Ошибка при скачивании:", e);
+        }
+      }
+
+      setValue("photos", blobs, { shouldDirty: false, shouldTouch: false });
+      setInitialPreviews(blobs.map((blob) => URL.createObjectURL(blob)));
+    }
+  };
+
+  useEffect(() => {
+    setHotelPhotos();
+  }, []);
 
   const { query, queryState, resetQueryState } = useQuery();
   const { query: getResorts, queryState: resortsState } = useQuery();
   const country = watch("country");
 
   useEffect(() => {
-    setResorts([]);
-    setValue("resort", "");
+    if (!hotel) {
+      setResorts([]);
+      setValue("resort", null);
 
-    if (country) {
-      getResorts(getResortsByCountryApiEndpoint(country)).then((res) =>
-        setResorts(res.map((r) => r.resortTitle)),
-      );
+      if (country) {
+        getResorts(getResortsByCountryApiEndpoint(country)).then(setResorts);
+      }
     }
-  }, [country, setValue, getResorts]);
+  }, [hotel, country, setValue, getResorts]);
+
+  const createHotel = async (formData) => {
+    await query(CREATE_HOTEL_API_ENDPOINT, {
+      method: "POST",
+      body: formData,
+    });
+    setTimeout(reset, 2000);
+  };
+
+  const updateHotel = async (formData, data) => {
+    await query(getHotelByIdApiEndpoint(hotel.id), {
+      method: "PATCH",
+      body: formData,
+    });
+    formReset(data);
+  };
 
   const onSubmit = async (data) => {
-    const { photos, ...hotelData } = data;
+    const { photos, resort, ...hotelData } = data;
     const formData = new FormData();
+
+    sortByOrderWeights(data.nutritionTypes, nutritionOrderWeights);
+    sortByOrderWeights(data.roomTypes, roomOrderWeights);
 
     Object.entries(hotelData).forEach(([key, value]) =>
       formData.append(key, value),
     );
     photos.forEach((photo) => formData.append("photos", photo));
     formData.append("stars", stars);
+    formData.append("resortId", resort.id);
 
     try {
-      await query(CREATE_HOTEL_API_ENDPOINT, {
-        method: "POST",
-        body: formData,
-      });
-      setTimeout(reset, 2000);
+      if (hotel) {
+        await updateHotel(formData, data);
+      } else {
+        await createHotel(formData);
+      }
     } finally {
       setTimeout(resetQueryState, 2000);
     }
   };
 
-  const triggerValidation = (name) => () => {
+  const handleCheckbox = (name) => (e, checked) => {
+    const currValues = getValues(name);
+    const value = e.target.value;
+
+    if (checked) {
+      setValue(name, [...currValues, value]);
+    } else {
+      setValue(
+        name,
+        currValues.filter((val) => val !== value),
+      );
+    }
+
     trigger(name);
   };
 
@@ -95,8 +167,9 @@ const HotelForm = ResetHoc(({ reset }) => {
         key={name}
         name={name}
         control={control}
-        render={({ field: { onChange } }) => (
+        render={({ field: { value, onChange } }) => (
           <Input
+            value={value}
             placeholder={placeholder}
             error={errors[name]}
             onChange={onChange}
@@ -107,16 +180,15 @@ const HotelForm = ResetHoc(({ reset }) => {
     ));
 
   const renderCheckboxFields = (arr, name) =>
-    arr.map(({ value, descr }, i) => (
+    arr.map(({ value, descr }) => (
       <FormControlLabel
         key={value}
         control={
           <Checkbox
             value={value}
+            checked={getValues(name).includes(value)}
             sx={{ marginLeft: "10px" }}
-            {...register(`${name}.${i}`, {
-              onChange: triggerValidation(name),
-            })}
+            onChange={handleCheckbox(name)}
           />
         }
         label={descr}
@@ -149,15 +221,17 @@ const HotelForm = ResetHoc(({ reset }) => {
           name="country"
           control={control}
           error={errors.country}
+          disabled={!!hotel}
         >
           Страна
         </SelectMenu>
         <SelectMenu
           values={resorts}
+          valueField="resortTitle"
           name="resort"
           control={control}
           error={errors.resort}
-          disabled={resortsState !== "fulfilled"}
+          disabled={!!hotel || resortsState !== "fulfilled"}
         >
           Курорт
         </SelectMenu>
@@ -171,7 +245,7 @@ const HotelForm = ResetHoc(({ reset }) => {
         {nutritionFieldsEls}
         {errors.nutritionTypes && (
           <FormHelperText sx={helperStyle} error>
-            {errors.nutritionTypes.root.message}
+            {errors.nutritionTypes.message}
           </FormHelperText>
         )}
       </div>
@@ -180,18 +254,25 @@ const HotelForm = ResetHoc(({ reset }) => {
         {roomFieldsEls}
         {errors.roomTypes && (
           <FormHelperText sx={helperStyle} error>
-            {errors.roomTypes.root.message}
+            {errors.roomTypes.message}
           </FormHelperText>
         )}
       </div>
-      <Photos control={control} trigger={trigger} error={errors.photos} />
+      <Photos
+        control={control}
+        trigger={trigger}
+        error={errors.photos}
+        externalPreviews={initialPreviews}
+      />
       <div className={styles.textFieldsWrapper}>{largeTextFieldsEls}</div>
       <SubmitWrapper
         queryState={queryState}
         spinner={<AdminSpinner />}
-        btnText="Добавить"
+        btnText={hotel ? "Сохранить изменения" : "Добавить"}
         errorMsg="Произошла ошибка"
-        successText="Отель успешно добавлен"
+        successText={
+          hotel ? "Изменения успешно сохранены" : "Отель успешно добавлен"
+        }
       />
     </form>
   );

@@ -1,7 +1,11 @@
 package com.example.kursach_server.repository;
 
+import com.example.kursach_server.constants.BookingStatuses;
 import com.example.kursach_server.models.Booking;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,15 +17,74 @@ import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID> {
-    List<Booking> findByUserId(UUID userId);
+    List<Booking> findByUserIdOrderByBookingDateDesc(UUID userId);
     Optional<Booking> findFirstByUserEmailAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
         String email,
         Date endDate,
         Date startDate
     );
-    List<Booking> findByBookingDateBetweenAndEmployeeIsNullOrderByBookingDateAsc(Date startDate, Date endDate);
-    List<Booking> findByEmployeeId(UUID employeeId);
-    boolean existsByUserIdAndTourIdAndEndDateLessThanEqual(UUID userId, UUID tourId, Date date);
+
+    @Query(
+        value = "SELECT b FROM Booking b WHERE b.status = '" + BookingStatuses.UNDER_CONSIDERATION + "' " +
+        "AND b.bookingDate BETWEEN :startDate AND :endDate " +
+        "AND LOWER(b.user.email) LIKE %:email% AND b.user.phoneNumber LIKE %:phoneNumber%",
+        countQuery = "SELECT COUNT(b) FROM Booking b WHERE b.status = '" + BookingStatuses.UNDER_CONSIDERATION + "' " +
+        "AND b.bookingDate BETWEEN :startDate AND :endDate " +
+        "AND LOWER(b.user.email) LIKE %:email% AND b.user.phoneNumber LIKE %:phoneNumber%"
+    )
+    Page<Booking> findNewBookingsByParams(
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate,
+        @Param("email") String email,
+        @Param("phoneNumber") String phoneNumber,
+        Pageable pageable
+    );
+
+    @Query(
+        value = "SELECT b FROM Booking b WHERE b.startDate > :today " +
+        "AND b.bookingDate BETWEEN :startDate AND :endDate " +
+        "AND LOWER(b.user.email) LIKE %:email% AND b.user.phoneNumber LIKE %:phoneNumber% " +
+        "AND b.employee.id = :employeeId",
+        countQuery = "SELECT COUNT(b) FROM Booking b WHERE b.startDate > :today " +
+        "AND b.bookingDate BETWEEN :startDate AND :endDate " +
+        "AND LOWER(b.user.email) LIKE %:email% AND b.user.phoneNumber LIKE %:phoneNumber% " +
+        "AND b.employee.id = :employeeId"
+    )
+    Page<Booking> findTakenByParams(
+        @Param("today") Date today,
+        @Param("startDate") Date startDate,
+        @Param("endDate") Date endDate,
+        @Param("email") String email,
+        @Param("phoneNumber") String phoneNumber,
+        @Param("employeeId") UUID employeeId,
+        Pageable pageable
+    );
+
+    boolean existsByUserIdAndTourIdAndStatus(UUID userId, UUID tourId, String status);
+
+    @Modifying
+    @Query(
+        "UPDATE Booking b SET b.status = '" + BookingStatuses.REJECTED + "' " +
+        "WHERE b.status IN ('" + BookingStatuses.UNDER_CONSIDERATION + "', '" + BookingStatuses.TAKEN + "') " +
+        "AND b.startDate <= :today"
+    )
+    void rejectExpiredBookings(@Param("today") Date today);
+
+    @Modifying
+    @Query(
+        "UPDATE Booking b SET b.status = '" + BookingStatuses.IN_PROGRESS + "' " +
+        "WHERE b.status = '" + BookingStatuses.APPROVED + "' " +
+        "AND b.startDate <= :today"
+    )
+    void startApprovedBookings(@Param("today") Date today);
+
+    @Modifying
+    @Query(
+        "UPDATE Booking b SET b.status = '" + BookingStatuses.COMPLETED + "' " +
+        "WHERE b.status = '" + BookingStatuses.IN_PROGRESS + "' " +
+        "AND b.endDate <= :today"
+    )
+    void completeStartedBookings(@Param("today") Date today);
 
     @Query(
         value = "SELECT EXTRACT(MONTH FROM b.booking_date) - 1 as month, SUM(b.total_price) as total " +

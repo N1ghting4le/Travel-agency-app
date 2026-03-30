@@ -23,7 +23,7 @@ const TourPage = async ({ params }) => {
   } = tour;
   const {
     hotelTitle,
-    resort,
+    resort: { resortTitle },
     address,
     hotelDescr,
     stars,
@@ -32,7 +32,6 @@ const TourPage = async ({ params }) => {
     roomTypes,
     photos,
   } = hotel;
-  const { resortTitle } = resort;
 
   const tourInfo = getTourInfo(departureCity, destinationCountry, resortTitle);
 

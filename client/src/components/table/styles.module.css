@@ -23,7 +23,7 @@
 .wrapper::before {
   content: "";
   position: absolute;
-  right: -1px;
+  right: 0;
   top: 0;
   height: 30px;
   width: 6px;
@@ -52,6 +52,7 @@
   border-top: none;
   position: sticky;
   top: 0;
+  z-index: 1;
   background-color: #dfdfdf;
 }
 
@@ -86,18 +87,15 @@
   text-decoration: underline;
 }
 
-.pagination {
+.paginationContainer {
   border-top: 1px solid rgba(0, 0, 0, 0.23);
   padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
 }
 
-.btn {
-  padding: 0;
-  background-color: transparent;
-  border: none;
-  height: 24px;
-  cursor: pointer;
+.tableCell.editCell {
+  padding-inline: 0;
+}
+
+.tableRow.disabled .tableCell:not(.editCell) {
+  opacity: 0.5;
 }
