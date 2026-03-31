@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 public class UserServiceTest {
 
     @Container
+    @SuppressWarnings("resource")
     public static PostgreSQLContainer<?> postgreSQLContainer =
         new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("testdb")

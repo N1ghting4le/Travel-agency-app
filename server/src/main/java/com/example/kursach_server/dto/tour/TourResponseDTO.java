@@ -1,11 +1,9 @@
 package com.example.kursach_server.dto.tour;
 
 import com.example.kursach_server.dto.hotel.HotelResponseDTO;
-import com.example.kursach_server.models.Review;
 import com.example.kursach_server.models.Tour;
 import lombok.Getter;
 
-import java.util.OptionalDouble;
 import java.util.UUID;
 
 @Getter

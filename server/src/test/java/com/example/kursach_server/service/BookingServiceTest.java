@@ -38,12 +38,14 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @Transactional
 public class BookingServiceTest {
+    
     @Container
+    @SuppressWarnings("resource")
     public static PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("testdb")
-                    .withUsername("testuser")
-                    .withPassword("testpass");
+        new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("testdb")
+            .withUsername("testuser")
+            .withPassword("testpass");
 
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
