@@ -24,6 +24,9 @@ RUN \
 # Step 6. Copy all the files from the local repo into the Docker container
 COPY . .
 
+ARG NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+
 # Step 7. Optional, disables Nextjs telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 

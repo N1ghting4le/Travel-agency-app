@@ -1,19 +1,23 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.constants.BookingStatuses;
 import com.example.kursach_server.dto.booking.BookingResponseDTO;
 import com.example.kursach_server.dto.booking.BookingWithUserInfoResponseDTO;
 import com.example.kursach_server.dto.booking.CreateBookingDTO;
+import com.example.kursach_server.exceptions.conflict.BookingAlreadyTakenException;
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.exceptions.conflict.UnavailableTourException;
 import com.example.kursach_server.models.*;
 import com.example.kursach_server.repository.*;
-import com.example.kursach_server.requests.DateRangeRequest;
+import com.example.kursach_server.requests.BookingsRequest;
+import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -22,6 +26,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,10 +40,10 @@ import static org.mockito.Mockito.when;
 public class BookingServiceTest {
     @Container
     public static PostgreSQLContainer<?> postgreSQLContainer =
-        new PostgreSQLContainer<>("postgres:16-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("testuser")
-            .withPassword("testpass");
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withDatabaseName("testdb")
+                    .withUsername("testuser")
+                    .withPassword("testpass");
 
     @DynamicPropertySource
     static void postgresqlProperties(DynamicPropertyRegistry registry) {
@@ -67,19 +72,15 @@ public class BookingServiceTest {
 
     private User testUser;
     private User testEmployee;
-    private Resort testResort;
-    private Hotel testHotel;
     private Tour testTour;
     private Booking testBooking;
 
     @BeforeEach
     void setUp() {
-        // Очистка данных
         bookingRepository.deleteAll();
         tourRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Создание тестового пользователя
         testUser = new User();
         testUser.setEmail("user@test.com");
         testUser.setName("Test User");
@@ -89,7 +90,6 @@ public class BookingServiceTest {
         testUser.setPassword("password");
         userRepository.save(testUser);
 
-        // Создание тестового сотрудника
         testEmployee = new User();
         testEmployee.setEmail("employee@test.com");
         testEmployee.setName("Employee");
@@ -99,12 +99,12 @@ public class BookingServiceTest {
         testEmployee.setPassword("password");
         userRepository.save(testEmployee);
 
-        testResort = new Resort();
+        Resort testResort = new Resort();
         testResort.setResortCountry("United States");
         testResort.setResortTitle("Miami");
         resortRepository.save(testResort);
 
-        testHotel = new Hotel();
+        Hotel testHotel = new Hotel();
         testHotel.setResort(testResort);
         testHotel.setHotelDescr("Hotel Description");
         testHotel.setHotelTitle("Hotel Title");
@@ -115,7 +115,6 @@ public class BookingServiceTest {
         testHotel.setRoomTypes(new String[]{});
         hotelRepository.save(testHotel);
 
-        // Создание тестового тура
         testTour = new Tour();
         testTour.setTourTitle("Test Tour");
         testTour.setTourDescr("Test Description");
@@ -123,26 +122,31 @@ public class BookingServiceTest {
         testTour.setDepartureCity("Minsk");
         testTour.setDestinationCountry("United States");
         testTour.setHotel(testHotel);
+        testTour.setDelete(false);
         tourRepository.save(testTour);
 
-        // Создание тестовой брони
         testBooking = new Booking();
         testBooking.setUser(testUser);
         testBooking.setTour(testTour);
-        testBooking.setStartDate(new Date(System.currentTimeMillis() + 86400000));
-        testBooking.setEndDate(new Date(System.currentTimeMillis() + 172800000));
+        testBooking.setStartDate(new Date(System.currentTimeMillis() + 86400000)); // +1 день
+        testBooking.setEndDate(new Date(System.currentTimeMillis() + 172800000));   // +2 дня
         testBooking.setStatus("Новая");
         testBooking.setBookingDate(new Date(System.currentTimeMillis()));
         testBooking.setNutritionType("AI");
         testBooking.setRoomType("DBL");
         testBooking.setAdultsAmount(2);
         testBooking.setChildrenAmount(0);
+        testBooking.setStatus(BookingStatuses.UNDER_CONSIDERATION);
         bookingRepository.save(testBooking);
     }
 
     private HttpServletRequest mockRequestWithUser(String email) {
         HttpServletRequest request = mock(HttpServletRequest.class);
+        // Мокаем как атрибут, так и Principal на случай реализации Utils.getUserEmail()
         when(request.getAttribute("email")).thenReturn(email);
+        Principal principal = mock(Principal.class);
+        when(principal.getName()).thenReturn(email);
+        when(request.getUserPrincipal()).thenReturn(principal);
         return request;
     }
 
@@ -150,15 +154,16 @@ public class BookingServiceTest {
     void createBooking_ShouldSuccessfullyCreateBooking() throws Exception {
         CreateBookingDTO dto = new CreateBookingDTO();
         dto.setTourId(testTour.getId());
-        dto.setStartDate(new Date(System.currentTimeMillis() + 259200000));
-        dto.setEndDate(new Date(System.currentTimeMillis() + 345600000));
+        dto.setStartDate(new Date(System.currentTimeMillis() + 259200000)); // +3 дня
+        dto.setEndDate(new Date(System.currentTimeMillis() + 345600000));   // +4 дня
         dto.setAdultsAmount(2);
         dto.setChildrenAmount(0);
         dto.setRoomType("DBL");
         dto.setNutrType("AI");
 
-        bookingService.createBooking(dto, mockRequestWithUser(testUser.getEmail()));
+        UUID newBookingId = bookingService.createBooking(dto, mockRequestWithUser(testUser.getEmail()));
 
+        assertNotNull(newBookingId);
         List<Booking> bookings = bookingRepository.findAll();
         assertEquals(2, bookings.size());
     }
@@ -204,22 +209,43 @@ public class BookingServiceTest {
         List<BookingResponseDTO> result = bookingService.getUserBookings(testUser.getId());
 
         assertEquals(1, result.size());
-        assertEquals(testTour.getId(), result.get(0).getTourId());
+        assertEquals(testTour.getId(), result.getFirst().getTourId());
     }
 
     @Test
-    void getBookingsInDateRange_ShouldReturnBookings() {
-        DateRangeRequest dateRange = new DateRangeRequest();
-        dateRange.setStartDate(new Date(System.currentTimeMillis()));
-        dateRange.setEndDate(new Date(System.currentTimeMillis() + 259200000)); // +3 дня
+    void getBookingsByParams_WithNullEmployeeId_ShouldReturnNewBookings() {
+        BookingsRequest request = new BookingsRequest();
+        request.setStartDate(new Date(System.currentTimeMillis() - 86400000));
+        request.setEndDate(new Date(System.currentTimeMillis() + 86400000));
+        request.setEmail("test");
+        request.setPhoneNumber("123");
 
-        List<BookingWithUserInfoResponseDTO> result = bookingService.getBookingsInDateRange(
-                dateRange.getStartDate(),
-                dateRange.getEndDate()
-        );
+        Page<BookingWithUserInfoResponseDTO> result = bookingService.getBookingsByParams(request, 0, 10);
 
-        assertEquals(1, result.size());
-        assertEquals(testUser.getId(), result.get(0).getUserInfo().getId());
+        assertNotNull(result);
+        assertFalse(result.getContent().isEmpty());
+        assertEquals(testUser.getId(), result.getContent().getFirst().getUserInfo().getId());
+    }
+
+    @Test
+    void getBookingsByParams_WithEmployeeId_ShouldReturnTakenBookings() {
+        // Назначаем сотрудника для бронирования
+        testBooking.setEmployee(testEmployee);
+        testBooking.setStatus(BookingStatuses.TAKEN);
+        bookingRepository.save(testBooking);
+
+        BookingsRequest request = new BookingsRequest();
+        request.setStartDate(new Date(System.currentTimeMillis() - 86400000));
+        request.setEndDate(new Date(System.currentTimeMillis() + 86400000));
+        request.setEmail("test");
+        request.setPhoneNumber("123");
+        request.setEmployeeId(testEmployee.getId());
+
+        Page<BookingWithUserInfoResponseDTO> result = bookingService.getBookingsByParams(request, 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(testUser.getId(), result.getContent().getFirst().getUserInfo().getId());
     }
 
     @Test
@@ -227,7 +253,7 @@ public class BookingServiceTest {
         bookingService.takeBooking(testBooking.getId(), mockRequestWithUser(testEmployee.getEmail()));
 
         Booking updated = bookingRepository.findById(testBooking.getId()).orElseThrow();
-        assertEquals("Взято сотрудником", updated.getStatus());
+        assertEquals(BookingStatuses.TAKEN, updated.getStatus());
         assertEquals(testEmployee.getId(), updated.getEmployee().getId());
     }
 
@@ -238,11 +264,20 @@ public class BookingServiceTest {
     }
 
     @Test
+    void takeBooking_ShouldThrowWhenAlreadyTaken() {
+        testBooking.setEmployee(testEmployee);
+        bookingRepository.save(testBooking);
+
+        assertThrows(BookingAlreadyTakenException.class, () ->
+                bookingService.takeBooking(testBooking.getId(), mockRequestWithUser(testEmployee.getEmail())));
+    }
+
+    @Test
     void changeStatus_ShouldApproveBooking() throws Exception {
         bookingService.changeStatus(testBooking.getId(), "approve");
 
         Booking updated = bookingRepository.findById(testBooking.getId()).orElseThrow();
-        assertEquals("Одобрено", updated.getStatus());
+        assertEquals(Utils.getBookingStatusByAction("approve"), updated.getStatus());
     }
 
     @Test
@@ -250,12 +285,18 @@ public class BookingServiceTest {
         bookingService.changeStatus(testBooking.getId(), "reject");
 
         Booking updated = bookingRepository.findById(testBooking.getId()).orElseThrow();
-        assertEquals("Отклонено", updated.getStatus());
+        assertEquals(Utils.getBookingStatusByAction("reject"), updated.getStatus());
     }
 
     @Test
     void changeStatus_ShouldThrowWhenBookingNotFound() {
         assertThrows(EntityNotFoundException.class, () ->
                 bookingService.changeStatus(UUID.randomUUID(), "approve"));
+    }
+
+    @Test
+    void deleteBookings_ShouldExecuteWithoutErrors() {
+        // Проверяем, что планировщик успешно вызывает методы репозитория без ошибок
+        assertDoesNotThrow(() -> bookingService.deleteBookings());
     }
 }

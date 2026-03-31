@@ -130,7 +130,7 @@ const HotelForm = ResetHoc(({ hotel, reset }) => {
     Object.entries(hotelData).forEach(([key, value]) =>
       formData.append(key, value),
     );
-    photos.forEach((photo) => formData.append("photos", photo));
+    photos.forEach((photo, i) => formData.append(`photos[${i}]`, photo));
     formData.append("stars", stars);
     formData.append("resortId", resort.id);
 

@@ -1,4 +1,4 @@
-export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const getTourByIdApiEndpoint = (id) => `${BASE_URL}/tour/get/${id}`;
 

@@ -7,6 +7,8 @@ import {
 } from "@tanstack/react-table";
 import { Pagination } from "../pagination";
 import { classNames } from "@/utils/classNames";
+import { OverflowTip } from "../overflowTip";
+import { Typography } from "@mui/material";
 
 import styles from "./styles.module.css";
 
@@ -68,7 +70,12 @@ export function Table({
                       },
                     ])}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <OverflowTip>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </OverflowTip>
                   </td>
                 ))}
               </tr>

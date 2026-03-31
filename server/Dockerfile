@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Используем лёгкий образ с JDK 21 для запуска
-FROM openjdk:21-oracle
+FROM eclipse-temurin:21-jre-alpine
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
