@@ -1,7 +1,7 @@
 package com.example.kursach_server.service;
 
-import com.example.kursach_server.dto.PageDto;
-import com.example.kursach_server.dto.booking.TourStatsDTO;
+import com.example.kursach_server.dto.PageDTO;
+import com.example.kursach_server.dto.tour.TourStatsDTO;
 import com.example.kursach_server.dto.tour.*;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.models.Hotel;
@@ -28,7 +28,7 @@ public class TourService {
         this.hotelRepository = hotelRepository;
     }
 
-    public PageDto<TourPreviewDTO> getToursByParams(TourParamsRequest request, int page, int pageSize) {
+    public PageDTO<TourPreviewDTO> getToursByParams(TourParamsRequest request, int page, int pageSize) {
         String departureCity = request.getDepartureCity();
         String destinationCountry = request.getDestinationCountry();
         List<Tour> tours = tourRepository.findByCriteria(departureCity, destinationCountry, request.getStars());
@@ -54,7 +54,7 @@ public class TourService {
             : filteredTours.subList(start, end);
 
         Page<TourPreviewDTO> responsePage = new PageImpl<>(pageContent, pageable, filteredTours.size());
-        return new PageDto<>(responsePage);
+        return new PageDTO<>(responsePage);
     }
 
     public Page<TourTableDTO> getToursForAdminTable(

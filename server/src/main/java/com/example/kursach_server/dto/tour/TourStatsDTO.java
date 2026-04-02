@@ -1,4 +1,4 @@
-package com.example.kursach_server.dto.booking;
+package com.example.kursach_server.dto.tour;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

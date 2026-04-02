@@ -1,6 +1,8 @@
 package com.example.kursach_server.service;
 
 import com.example.kursach_server.constants.BookingStatuses;
+import com.example.kursach_server.constants.Roles;
+import com.example.kursach_server.constants.Time;
 import com.example.kursach_server.dto.booking.BookingResponseDTO;
 import com.example.kursach_server.dto.booking.BookingWithUserInfoResponseDTO;
 import com.example.kursach_server.dto.booking.CreateBookingDTO;
@@ -88,7 +90,7 @@ public class BookingServiceTest {
         testUser.setName("Test User");
         testUser.setSurname("Testov");
         testUser.setPhoneNumber("+1234567890");
-        testUser.setRole("USER");
+        testUser.setRole(Roles.USER);
         testUser.setPassword("password");
         userRepository.save(testUser);
 
@@ -97,7 +99,7 @@ public class BookingServiceTest {
         testEmployee.setName("Employee");
         testEmployee.setSurname("Employeev");
         testEmployee.setPhoneNumber("+0987654321");
-        testEmployee.setRole("EMPL");
+        testEmployee.setRole(Roles.EMPLOYEE);
         testEmployee.setPassword("password");
         userRepository.save(testEmployee);
 
@@ -130,8 +132,8 @@ public class BookingServiceTest {
         testBooking = new Booking();
         testBooking.setUser(testUser);
         testBooking.setTour(testTour);
-        testBooking.setStartDate(new Date(System.currentTimeMillis() + 86400000)); // +1 день
-        testBooking.setEndDate(new Date(System.currentTimeMillis() + 172800000));   // +2 дня
+        testBooking.setStartDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY));
+        testBooking.setEndDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY * 2));
         testBooking.setStatus("Новая");
         testBooking.setBookingDate(new Date(System.currentTimeMillis()));
         testBooking.setNutritionType("AI");
@@ -156,8 +158,8 @@ public class BookingServiceTest {
     void createBooking_ShouldSuccessfullyCreateBooking() throws Exception {
         CreateBookingDTO dto = new CreateBookingDTO();
         dto.setTourId(testTour.getId());
-        dto.setStartDate(new Date(System.currentTimeMillis() + 259200000)); // +3 дня
-        dto.setEndDate(new Date(System.currentTimeMillis() + 345600000));   // +4 дня
+        dto.setStartDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY * 3));
+        dto.setEndDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY * 4));
         dto.setAdultsAmount(2);
         dto.setChildrenAmount(0);
         dto.setRoomType("DBL");
@@ -217,8 +219,8 @@ public class BookingServiceTest {
     @Test
     void getBookingsByParams_WithNullEmployeeId_ShouldReturnNewBookings() {
         BookingsRequest request = new BookingsRequest();
-        request.setStartDate(new Date(System.currentTimeMillis() - 86400000));
-        request.setEndDate(new Date(System.currentTimeMillis() + 86400000));
+        request.setStartDate(new Date(System.currentTimeMillis() - Time.MS_IN_DAY));
+        request.setEndDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY));
         request.setEmail("test");
         request.setPhoneNumber("123");
 
@@ -237,8 +239,8 @@ public class BookingServiceTest {
         bookingRepository.save(testBooking);
 
         BookingsRequest request = new BookingsRequest();
-        request.setStartDate(new Date(System.currentTimeMillis() - 86400000));
-        request.setEndDate(new Date(System.currentTimeMillis() + 86400000));
+        request.setStartDate(new Date(System.currentTimeMillis() - Time.MS_IN_DAY));
+        request.setEndDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY));
         request.setEmail("test");
         request.setPhoneNumber("123");
         request.setEmployeeId(testEmployee.getId());

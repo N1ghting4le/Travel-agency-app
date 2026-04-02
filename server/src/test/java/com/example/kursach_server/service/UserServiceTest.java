@@ -1,5 +1,6 @@
 package com.example.kursach_server.service;
 
+import com.example.kursach_server.constants.Roles;
 import com.example.kursach_server.dto.user.CreateUserDTO;
 import com.example.kursach_server.requests.SignInRequest;
 import com.example.kursach_server.dto.user.UserWithTokenResponseDTO;
@@ -59,7 +60,6 @@ public class UserServiceTest {
     private final String testEmail = "test@example.com";
     private final String testPassword = "testpassword";
     private final String testName = "Test User";
-    private final String testSurname = "Testov";
 
     @BeforeEach
     void setUp() {
@@ -69,8 +69,9 @@ public class UserServiceTest {
         user.setEmail(testEmail);
         user.setPhoneNumber("+1234567890");
         user.setPassword(passwordEncoder.encode(testPassword));
-        user.setRole("USER");
+        user.setRole(Roles.USER);
         user.setName(testName);
+        String testSurname = "Testov";
         user.setSurname(testSurname);
         userRepository.save(user);
     }

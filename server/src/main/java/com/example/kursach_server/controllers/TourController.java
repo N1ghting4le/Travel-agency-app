@@ -1,8 +1,8 @@
 package com.example.kursach_server.controllers;
 
 import com.example.kursach_server.constants.Roles;
-import com.example.kursach_server.dto.PageDto;
-import com.example.kursach_server.dto.booking.TourStatsDTO;
+import com.example.kursach_server.dto.PageDTO;
+import com.example.kursach_server.dto.tour.TourStatsDTO;
 import com.example.kursach_server.dto.tour.*;
 import com.example.kursach_server.exceptions.notFound.NotFoundException;
 import jakarta.annotation.security.RolesAllowed;
@@ -25,7 +25,7 @@ public class TourController {
     }
 
     @PostMapping("/getTours")
-    public PageDto<TourPreviewDTO> getToursByParams(
+    public PageDTO<TourPreviewDTO> getToursByParams(
         @Valid @RequestBody TourParamsRequest request,
         @RequestParam int page,
         @RequestParam int pageSize
