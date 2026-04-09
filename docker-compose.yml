@@ -51,7 +51,9 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_BASE_URL: ${BASE_URL}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL}
+    environment:
+      BASE_URL: ${BASE_URL}
     restart: always
     ports:
       - 3001:3001
