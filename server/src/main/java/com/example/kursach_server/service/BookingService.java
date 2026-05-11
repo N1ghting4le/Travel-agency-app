@@ -7,12 +7,8 @@ import com.example.kursach_server.exceptions.conflict.BookingAlreadyTakenExcepti
 import com.example.kursach_server.exceptions.conflict.BookingIntersectionException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.exceptions.conflict.UnavailableTourException;
-import com.example.kursach_server.models.Booking;
-import com.example.kursach_server.models.Tour;
-import com.example.kursach_server.models.User;
-import com.example.kursach_server.repository.BookingRepository;
-import com.example.kursach_server.repository.TourRepository;
-import com.example.kursach_server.repository.UserRepository;
+import com.example.kursach_server.models.*;
+import com.example.kursach_server.repository.*;
 import com.example.kursach_server.requests.BookingsRequest;
 import com.example.kursach_server.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,15 +28,21 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final TourRepository tourRepository;
     private final UserRepository userRepository;
+    private final RoomTypeRepository roomTypeRepository;
+    private final NutritionTypeRepository nutritionTypeRepository;
 
     public BookingService(
         BookingRepository bookingRepository,
         TourRepository tourRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        RoomTypeRepository roomTypeRepository,
+        NutritionTypeRepository nutritionTypeRepository
     ) {
         this.bookingRepository = bookingRepository;
         this.tourRepository = tourRepository;
         this.userRepository = userRepository;
+        this.roomTypeRepository = roomTypeRepository;
+        this.nutritionTypeRepository = nutritionTypeRepository;
     }
 
     public UUID createBooking(CreateBookingDTO createBookingDTO, HttpServletRequest request)
@@ -65,10 +67,17 @@ public class BookingService {
 
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+        RoomType rt = roomTypeRepository.findByName(createBookingDTO.getRoomType())
+            .orElseThrow(() -> new EntityNotFoundException("Тип номера не найден"));
+        NutritionType nt = nutritionTypeRepository.findByName(createBookingDTO.getNutrType())
+            .orElseThrow(() -> new EntityNotFoundException("Тип питания не найден"));
+
         Booking newBooking = new Booking(createBookingDTO);
 
         newBooking.setTour(tour);
         newBooking.setUser(user);
+        newBooking.setRoomType(rt);
+        newBooking.setNutritionType(nt);
         user.getBookings().add(newBooking);
         tour.getBookings().add(newBooking);
         bookingRepository.save(newBooking);

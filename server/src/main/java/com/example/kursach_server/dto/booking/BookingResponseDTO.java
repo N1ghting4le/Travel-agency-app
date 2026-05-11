@@ -29,8 +29,8 @@ public class BookingResponseDTO {
         id = booking.getId();
         tourId = tour.getId();
         tourTitle = tour.getTourTitle();
-        nutritionType = booking.getNutritionType();
-        roomType = booking.getRoomType();
+        nutritionType = booking.getNutritionType().getName();
+        roomType = booking.getRoomType().getName();
         adultsAmount = booking.getAdultsAmount();
         childrenAmount = booking.getChildrenAmount();
         startDate = booking.getStartDate();

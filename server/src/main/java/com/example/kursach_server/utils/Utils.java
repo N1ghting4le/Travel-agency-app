@@ -29,14 +29,14 @@ public class Utils {
         return list == null || list.isEmpty() || list.contains(item);
     }
 
-    public static <T> boolean listAndArrayEmptyOrIntersect(List<T> list, T[] array) {
-        if (list == null || list.isEmpty() || array == null || array.length == 0) {
+    public static <T> boolean twoListsEmptyOrIntersect(List<T> list1, List<T> list2) {
+        if (list1 == null || list1.isEmpty() || list2 == null || list2.isEmpty()) {
             return true;
         }
 
-        HashSet<T> set = new HashSet<>(list);
+        HashSet<T> set = new HashSet<>(list1);
 
-        return Arrays.stream(array).anyMatch(set::contains);
+        return list2.stream().anyMatch(set::contains);
     }
 
     public static void deleteDirectory(File file) {

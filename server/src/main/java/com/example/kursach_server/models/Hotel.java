@@ -37,13 +37,21 @@ public class Hotel {
     @Column(nullable = false, columnDefinition = "text")
     private String hotelDescr;
 
-    @Type(StringArrayType.class)
-    @Column(columnDefinition = "text[]", nullable = false)
-    private String[] nutritionTypes;
+    @ManyToMany
+    @JoinTable(
+        name = "hotel_nutrition_types",
+        joinColumns = @JoinColumn(name = "hotel_id"),
+        inverseJoinColumns = @JoinColumn(name = "nutrition_type_id")
+    )
+    private List<NutritionType> nutritionTypes = new ArrayList<>();
 
-    @Type(StringArrayType.class)
-    @Column(columnDefinition = "text[]", nullable = false)
-    private String[] roomTypes;
+    @ManyToMany
+    @JoinTable(
+        name = "hotel_room_types",
+        joinColumns = @JoinColumn(name = "hotel_id"),
+        inverseJoinColumns = @JoinColumn(name = "room_type_id")
+    )
+    private List<RoomType> roomTypes = new ArrayList<>();
 
     @Column(nullable = false, columnDefinition = "integer")
     private int stars;
@@ -63,8 +71,6 @@ public class Hotel {
         hotelTitle = hotelDTO.getTitle();
         address = hotelDTO.getAddress();
         hotelDescr = hotelDTO.getDescr();
-        nutritionTypes = hotelDTO.getNutritionTypes().toArray(String[]::new);
-        roomTypes = hotelDTO.getRoomTypes().toArray(String[]::new);
         stars = hotelDTO.getStars();
         photos = photoNames.toArray(String[]::new);
         hotelNotes = hotelDTO.getNotes();

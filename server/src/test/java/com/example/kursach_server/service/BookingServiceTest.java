@@ -74,6 +74,12 @@ public class BookingServiceTest {
     @Autowired
     private HotelRepository hotelRepository;
 
+    @Autowired
+    private RoomTypeRepository roomTypeRepository;
+
+    @Autowired
+    private NutritionTypeRepository nutritionTypeRepository;
+
     private User testUser;
     private User testEmployee;
     private Tour testTour;
@@ -84,6 +90,10 @@ public class BookingServiceTest {
         bookingRepository.deleteAll();
         tourRepository.deleteAll();
         userRepository.deleteAll();
+        resortRepository.deleteAll();
+        hotelRepository.deleteAll();
+        roomTypeRepository.deleteAll();
+        nutritionTypeRepository.deleteAll();
 
         testUser = new User();
         testUser.setEmail("user@test.com");
@@ -108,6 +118,14 @@ public class BookingServiceTest {
         testResort.setResortTitle("Miami");
         resortRepository.save(testResort);
 
+        NutritionType testNutritionType = new NutritionType();
+        testNutritionType.setName("AI");
+        nutritionTypeRepository.save(testNutritionType);
+
+        RoomType testRoomType = new RoomType();
+        testRoomType.setName("DBL");
+        roomTypeRepository.save(testRoomType);
+
         Hotel testHotel = new Hotel();
         testHotel.setResort(testResort);
         testHotel.setHotelDescr("Hotel Description");
@@ -115,8 +133,8 @@ public class BookingServiceTest {
         testHotel.setAddress("Hotel Address");
         testHotel.setPhotos(new String[]{});
         testHotel.setStars(5);
-        testHotel.setNutritionTypes(new String[]{});
-        testHotel.setRoomTypes(new String[]{});
+        testHotel.setNutritionTypes(List.of(testNutritionType));
+        testHotel.setRoomTypes(List.of(testRoomType));
         hotelRepository.save(testHotel);
 
         testTour = new Tour();
@@ -136,8 +154,8 @@ public class BookingServiceTest {
         testBooking.setEndDate(new Date(System.currentTimeMillis() + Time.MS_IN_DAY * 2));
         testBooking.setStatus("Новая");
         testBooking.setBookingDate(new Date(System.currentTimeMillis()));
-        testBooking.setNutritionType("AI");
-        testBooking.setRoomType("DBL");
+        testBooking.setNutritionType(testNutritionType);
+        testBooking.setRoomType(testRoomType);
         testBooking.setAdultsAmount(2);
         testBooking.setChildrenAmount(0);
         testBooking.setStatus(BookingStatuses.UNDER_CONSIDERATION);
@@ -146,7 +164,6 @@ public class BookingServiceTest {
 
     private HttpServletRequest mockRequestWithUser(String email) {
         HttpServletRequest request = mock(HttpServletRequest.class);
-        // Мокаем как атрибут, так и Principal на случай реализации Utils.getUserEmail()
         when(request.getAttribute("email")).thenReturn(email);
         Principal principal = mock(Principal.class);
         when(principal.getName()).thenReturn(email);

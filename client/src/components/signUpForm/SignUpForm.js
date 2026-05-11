@@ -27,6 +27,7 @@ const SignUpForm = () => {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
@@ -49,6 +50,8 @@ const SignUpForm = () => {
         authorize(res);
         router.back();
       }
+
+      reset();
     } catch (err) {
       setError(err.message);
     } finally {

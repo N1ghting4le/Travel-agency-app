@@ -7,9 +7,13 @@ import com.example.kursach_server.dto.hotel.HotelTableDTO;
 import com.example.kursach_server.exceptions.conflict.EntityAlreadyExistsException;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.models.Hotel;
+import com.example.kursach_server.models.NutritionType;
 import com.example.kursach_server.models.Resort;
+import com.example.kursach_server.models.RoomType;
 import com.example.kursach_server.repository.HotelRepository;
+import com.example.kursach_server.repository.NutritionTypeRepository;
 import com.example.kursach_server.repository.ResortRepository;
+import com.example.kursach_server.repository.RoomTypeRepository;
 import com.example.kursach_server.utils.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -25,20 +29,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class HotelService {
     private final HotelRepository hotelRepository;
     private final ResortRepository resortRepository;
+    private final RoomTypeRepository roomTypeRepository;
+    private final NutritionTypeRepository nutritionTypeRepository;
     private final String uploadDir;
 
     public HotelService(
         HotelRepository hotelRepository,
         ResortRepository resortRepository,
+        RoomTypeRepository roomTypeRepository,
+        NutritionTypeRepository nutritionTypeRepository,
         @Value("${upload.dir}") String uploadDir
     ) {
         this.hotelRepository = hotelRepository;
         this.resortRepository = resortRepository;
+        this.roomTypeRepository = roomTypeRepository;
+        this.nutritionTypeRepository = nutritionTypeRepository;
         this.uploadDir = uploadDir;
     }
 
@@ -61,6 +72,8 @@ public class HotelService {
         List<String> photoNames = saveHotelPhotos(hotelDTO, uploadPath);
 
         Hotel hotel = new Hotel(hotelDTO, photoNames);
+        hotel.setRoomTypes(getRoomTypes(hotelDTO.getRoomTypes()));
+        hotel.setNutritionTypes(getNutritionTypes(hotelDTO.getNutritionTypes()));
         hotel.setResort(resort);
         resort.getHotels().add(hotel);
         hotelRepository.save(hotel);
@@ -94,8 +107,8 @@ public class HotelService {
 
         hotel.setHotelTitle(hotelDTO.getTitle());
         hotel.setAddress(hotelDTO.getAddress());
-        hotel.setNutritionTypes(hotelDTO.getNutritionTypes().toArray(new String[0]));
-        hotel.setRoomTypes(hotelDTO.getRoomTypes().toArray(new String[0]));
+        hotel.setNutritionTypes(getNutritionTypes(hotelDTO.getNutritionTypes()));
+        hotel.setRoomTypes(getRoomTypes(hotelDTO.getRoomTypes()));
         hotel.setStars(hotelDTO.getStars());
         hotel.setPhotos(photoNames.toArray(new String[0]));
         hotel.setHotelDescr(hotelDTO.getDescr());
@@ -120,8 +133,14 @@ public class HotelService {
 
         return hotels.stream().filter(hotel -> (
             Utils.emptyOrContains(resortTitles, hotel.getResort().getResortTitle()) &&
-            Utils.listAndArrayEmptyOrIntersect(nutritionTypes, hotel.getNutritionTypes()) &&
-            Utils.listAndArrayEmptyOrIntersect(roomTypes, hotel.getRoomTypes())
+            Utils.twoListsEmptyOrIntersect(
+                nutritionTypes,
+                hotel.getNutritionTypes().stream().map(NutritionType::getName).toList()
+            ) &&
+            Utils.twoListsEmptyOrIntersect(
+                roomTypes,
+                hotel.getRoomTypes().stream().map(RoomType::getName).toList()
+            )
         )).map(HotelLookupDTO::new).toList();
     }
 
@@ -176,5 +195,17 @@ public class HotelService {
         }
 
         return photoNames;
+    }
+
+    private List<RoomType> getRoomTypes(List<String> roomTypes) {
+        return roomTypes.stream()
+            .map(name -> roomTypeRepository.findByName(name).orElseThrow())
+            .collect(Collectors.toList());
+    }
+
+    private List<NutritionType> getNutritionTypes(List<String> nutritionTypes) {
+        return nutritionTypes.stream()
+            .map(name -> nutritionTypeRepository.findByName(name).orElseThrow())
+            .collect(Collectors.toList());
     }
 }

@@ -5,6 +5,8 @@ import com.example.kursach_server.dto.tour.TourStatsDTO;
 import com.example.kursach_server.dto.tour.*;
 import com.example.kursach_server.exceptions.notFound.EntityNotFoundException;
 import com.example.kursach_server.models.Hotel;
+import com.example.kursach_server.models.NutritionType;
+import com.example.kursach_server.models.RoomType;
 import com.example.kursach_server.models.Tour;
 import com.example.kursach_server.repository.HotelRepository;
 import com.example.kursach_server.requests.TourParamsRequest;
@@ -37,8 +39,14 @@ public class TourService {
             Hotel hotel = tour.getHotel();
 
             return (
-                Utils.listAndArrayEmptyOrIntersect(request.getNutrition(), hotel.getNutritionTypes()) &&
-                Utils.listAndArrayEmptyOrIntersect(request.getRooms(), hotel.getRoomTypes()) &&
+                Utils.twoListsEmptyOrIntersect(
+                    request.getNutrition(),
+                    hotel.getNutritionTypes().stream().map(NutritionType::getName).toList()
+                ) &&
+                Utils.twoListsEmptyOrIntersect(
+                    request.getRooms(),
+                    hotel.getRoomTypes().stream().map(RoomType::getName).toList()
+                ) &&
                 Utils.emptyOrContains(request.getHotels(), hotel.getHotelTitle()) &&
                 Utils.emptyOrContains(request.getResorts(), hotel.getResort().getResortTitle())
             );

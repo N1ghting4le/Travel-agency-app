@@ -36,11 +36,13 @@ public class Booking {
     @JoinColumn(name = "taken_by")
     private User employee;
 
-    @Column(nullable = false, columnDefinition = "text")
-    private String roomType;
+    @ManyToOne
+    @JoinColumn(name = "room_type_id", nullable = false)
+    private RoomType roomType;
 
-    @Column(nullable = false, columnDefinition = "text")
-    private String nutritionType;
+    @ManyToOne
+    @JoinColumn(name = "nutrition_type_id", nullable = false)
+    private NutritionType nutritionType;
 
     @Column(nullable = false, columnDefinition = "integer")
     private int adultsAmount;
@@ -71,8 +73,6 @@ public class Booking {
         startDate = createBookingDTO.getStartDate();
         endDate = createBookingDTO.getEndDate();
         totalPrice = createBookingDTO.getTotalPrice();
-        roomType = createBookingDTO.getRoomType();
-        nutritionType = createBookingDTO.getNutrType();
         adultsAmount = createBookingDTO.getAdultsAmount();
         childrenAmount = createBookingDTO.getChildrenAmount();
         bookingDate = new Date();
