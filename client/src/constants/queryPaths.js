@@ -1,3 +1,6 @@
+import { CURRENCY_API_KEY } from "./currencyApiKey";
+import { currencies } from "@/lists/currencies";
+
 export const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export const getTourByIdApiEndpoint = (id) => `${BASE_URL}/tour/get/${id}`;
@@ -59,3 +62,6 @@ export const GET_TOURS_ADMIN_API_ENDPOINT = `${BASE_URL}/tour/get/admin`;
 
 export const GET_HOTELS_ADMIN_API_ENDPOINT = `${BASE_URL}/hotel/get/admin`;
 export const deleteHotelApiEndpoint = (id) => `${BASE_URL}/hotel/delete/${id}`;
+
+export const getCurrencyApiEndpoint = (currency) =>
+  `https://v6.exchangerate-api.com/v6/${CURRENCY_API_KEY}/pair/${currencies[0]}/${currency}`;

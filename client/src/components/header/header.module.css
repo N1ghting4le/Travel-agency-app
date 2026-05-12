@@ -13,6 +13,12 @@
     align-items: center;
 }
 
+.rightGroup {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 .accountBtn {
     border: none;
     border-radius: 8px;

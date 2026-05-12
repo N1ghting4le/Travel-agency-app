@@ -8,6 +8,7 @@ import SelectMenu from "../selectMenu/SelectMenu";
 import FormDatePicker from "../formDatePicker/FormDatePicker";
 import UserSpinner from "../loadingSpinners/UserSpinner";
 import SubmitWrapper from "../submitWrapper/SubmitWrapper";
+import { Price } from "../price";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { Restaurant, KingBed } from "@mui/icons-material";
@@ -197,7 +198,9 @@ const BookForm = ({
       {isValid && (
         <p className={styles.priceWrapper}>
           Итоговая стоимость тура:{" "}
-          <span className={styles.price}>${totalPrice}</span>
+          <span className={styles.price}>
+            <Price price={totalPrice} />
+          </span>
         </p>
       )}
       <SubmitWrapper

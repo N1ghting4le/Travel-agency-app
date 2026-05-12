@@ -1,5 +1,6 @@
 import styles from "./bookingItem.module.css";
 import Link from "next/link";
+import { Price } from "../price";
 
 const options = {
   weekday: "short",
@@ -46,7 +47,9 @@ const BookingItem = ({ booking, showStatus = false }) => {
       ))}
       <div className={styles.infoItem}>
         <p className={styles.title}>Цена</p>
-        <p className={styles.price}>${totalPrice}</p>
+        <p className={styles.price}>
+          <Price price={totalPrice} />
+        </p>
       </div>
       {showStatus && (
         <div className={styles.infoItem}>

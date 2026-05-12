@@ -6,6 +6,7 @@ import TourReviews from "@/components/tourReviews/TourReviews";
 import AllTourPhotos from "@/components/allTourPhotos/AllTourPhotos";
 import BookTourModal from "@/components/bookTourModal/BookTourModal";
 import Map from "@/components/map/Map";
+import { Price } from "@/components/price";
 import PinDropIcon from "@mui/icons-material/PinDrop";
 import { getData } from "@/utils/getData";
 import { getTourInfo, getPhotoSrc } from "./utils";
@@ -50,7 +51,11 @@ const TourPage = async ({ params }) => {
           </div>
         ))}
         <p className={styles.priceWrapper}>
-          от <span className={styles.price}>${basePrice}</span>/ночь
+          от{" "}
+          <span className={styles.price}>
+            <Price price={basePrice} />
+          </span>
+          /ночь
         </p>
       </div>
       <p>{tourDescr}</p>
