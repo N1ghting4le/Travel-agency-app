@@ -5,6 +5,7 @@ import { Divider } from "@mui/material";
 import TourReviews from "@/components/tourReviews/TourReviews";
 import AllTourPhotos from "@/components/allTourPhotos/AllTourPhotos";
 import BookTourModal from "@/components/bookTourModal/BookTourModal";
+import Map from "@/components/map/Map";
 import PinDropIcon from "@mui/icons-material/PinDrop";
 import { getData } from "@/utils/getData";
 import { getTourInfo, getPhotoSrc } from "./utils";
@@ -97,6 +98,7 @@ const TourPage = async ({ params }) => {
             title={hotelTitle}
           />
         </div>
+        <Map {...{ address }} />
       </div>
       <Divider />
       <p>{hotelDescr}</p>
