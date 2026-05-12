@@ -1,9 +1,9 @@
 "use client";
 
-import { useDisplayPrice } from "@/hooks/displayPrice.hook";
+import { useCurrency } from "../globalContext/hooks/useCurrency";
 
 export function Price({ price }) {
-  const displayPrice = useDisplayPrice(price);
+  const { currency, conversionRate } = useCurrency();
 
-  return displayPrice;
+  return `${(price * conversionRate).toFixed(2)} ${currency}`;
 }

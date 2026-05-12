@@ -25,9 +25,9 @@ const GlobalContext = ({ children }) => {
     if (currency === currencies[0]) {
       setConversionRate(1);
     } else {
-      query(getCurrencyApiEndpoint(currency)).then((res) =>
-        setConversionRate(res.conversion_rate),
-      );
+      query(getCurrencyApiEndpoint(currency))
+        .then((res) => setConversionRate(res.conversion_rate))
+        .catch(() => setCurrency(currencies[0]));
     }
   }, [currency]);
 
