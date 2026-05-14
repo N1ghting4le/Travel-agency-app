@@ -22,7 +22,7 @@ const SignUpForm = () => {
   const { isAdmin } = useAdmin();
   const [error, setError] = useState(null);
   const router = useRouter();
-  const authorize = useAuth();
+  const { authorize } = useAuth();
 
   const {
     control,

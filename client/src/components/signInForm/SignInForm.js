@@ -14,10 +14,12 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import useQuery from "@/hooks/query.hook";
 import useAuth from "@/hooks/auth.hook";
 import SubmitWrapper from "../submitWrapper/SubmitWrapper";
+import { PENDING } from "@/constants/queryStates";
+import { GoogleLogin } from "@react-oauth/google";
 
 const SignInForm = () => {
   const [error, setError] = useState(null);
-  const { authorize } = useAuth();
+  const { authorize, googleLogin, authQueryState } = useAuth();
   const router = useRouter();
 
   const {
@@ -46,38 +48,46 @@ const SignInForm = () => {
     }
   };
 
+  const handleGoogleSuccess = (credentialResponse) => {
+    googleLogin(credentialResponse.credential);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <Controller
-        name="phoneOrEmail"
-        control={control}
-        render={({ field: { onChange } }) => (
-          <Input
-            placeholder="Адрес эл. почты или моб. тел."
-            error={errors.phoneOrEmail}
-            onChange={onChange}
-          />
-        )}
-      />
-      <Controller
-        name="password"
-        control={control}
-        render={({ field: { onChange } }) => (
-          <PasswordInput
-            placeholder="Пароль"
-            error={errors.password}
-            onChange={onChange}
-          />
-        )}
-      />
-      <SubmitWrapper
-        queryState={queryState}
-        spinner={<UserSpinner />}
-        btnText="Войти"
-        errorMsg={error || "Произошла ошибка"}
-        successText="Вход выполнен"
-      />
-    </form>
+    <div className={styles.wrapper}>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+        <Controller
+          name="phoneOrEmail"
+          control={control}
+          render={({ field: { onChange } }) => (
+            <Input
+              placeholder="Адрес эл. почты или моб. тел."
+              error={errors.phoneOrEmail}
+              onChange={onChange}
+            />
+          )}
+        />
+        <Controller
+          name="password"
+          control={control}
+          render={({ field: { onChange } }) => (
+            <PasswordInput
+              placeholder="Пароль"
+              error={errors.password}
+              onChange={onChange}
+            />
+          )}
+        />
+        <SubmitWrapper
+          queryState={queryState}
+          spinner={<UserSpinner />}
+          btnText="Войти"
+          errorMsg={error || "Произошла ошибка"}
+          successText="Вход выполнен"
+          disabled={authQueryState === PENDING}
+        />
+      </form>
+      <GoogleLogin onSuccess={handleGoogleSuccess} useOneTap />
+    </div>
   );
 };
 

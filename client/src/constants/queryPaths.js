@@ -14,6 +14,9 @@ export const GET_BOOKINGS_BY_PARAMS_API_ENDPOINT = `${BASE_URL}/booking/getByPar
 export const takeBookingApiEndpoint = (id) => `${BASE_URL}/booking/take/${id}`;
 
 export const AUTH_API_ENDPOINT = `${BASE_URL}/user/auth`;
+export const GOOGLE_AUTH_ENDPOINT = `${BASE_URL}/user/google`;
+export const COMPLETE_PROFILE_ENDPOINT = `${BASE_URL}/user/completeProfile`;
+export const DELETE_UNFINISHED_PROFILE_ENDPOINT = `${BASE_URL}/user/deleteUnfinished`;
 
 export const getResortsByCountryApiEndpoint = (country) =>
   `${BASE_URL}/resort/get/${country}`;

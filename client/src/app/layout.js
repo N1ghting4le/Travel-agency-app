@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import GlobalContext from "@/components/globalContext/GlobalContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./globals.css";
 
 const montserrat = localFont({
@@ -22,7 +23,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${montserrat.variable} ${iconFont.variable}`}>
-        <GlobalContext>{children}</GlobalContext>
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        >
+          <GlobalContext>{children}</GlobalContext>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );
