@@ -4,12 +4,12 @@ import { archiveTourApiEndpoint } from "@/constants/queryPaths";
 import styles from "./toursListItem.module.css";
 import { useAdmin } from "../globalContext/hooks/useAdmin";
 import useQuery from "@/hooks/query.hook";
-import { useDisplayPrice } from "@/hooks/displayPrice.hook";
 import Link from "next/link";
 import DisplayStars from "../displayStars/DisplayStars";
 import EditIcon from "@mui/icons-material/Edit";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import AdminSpinner from "../loadingSpinners/AdminSpinner";
+import { Price } from "../price";
 import { reviewStr } from "../tourReviews/utils";
 import { getPhotoSrc } from "@/app/(regularUser)/tours/[id]/utils";
 
@@ -28,7 +28,6 @@ const ToursListItem = ({
     amount: marksAmount,
     basePrice: price,
   } = tour;
-  const displayPrice = useDisplayPrice(price);
   const { hotelTitle, resort, photo, stars } = hotel;
   const { isAdmin } = useAdmin();
   const { query, isIdle, isLoading, isError, isSuccess, resetQueryState } =
@@ -55,7 +54,11 @@ const ToursListItem = ({
           <div className={styles.topInfo}>
             <p className={styles.title}>{tourTitle}</p>
             <p>
-              от <span className={styles.price}>{displayPrice}</span>/ночь
+              от{" "}
+              <span className={styles.price}>
+                <Price {...{ price }} />
+              </span>
+              /ночь
             </p>
           </div>
           <p>
