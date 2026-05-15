@@ -12,6 +12,7 @@ export const Context = createContext();
 
 const GlobalContext = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [googleAuthToken, setGoogleAuthToken] = useState(null);
   const [currency, setCurrency] = useState(currencies[0]);
   const [conversionRate, setConversionRate] = useState(1);
   const toursSearchParamsRef = useRef({
@@ -34,14 +35,16 @@ const GlobalContext = ({ children }) => {
   const provider = useMemo(
     () => ({
       user,
+      googleAuthToken,
       toursSearchParamsRef,
       isAdmin: !!user?.admin,
       currency,
       conversionRate,
       setUser,
+      setGoogleAuthToken,
       setCurrency,
     }),
-    [user, currency, conversionRate],
+    [user, googleAuthToken, currency, conversionRate],
   );
 
   return (

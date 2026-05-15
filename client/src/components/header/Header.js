@@ -25,15 +25,11 @@ const Header = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (user) {
-      return;
-    }
-
     query(AUTH_API_ENDPOINT)
       .then(authorize)
       .catch(logout)
       .finally(() => setIsAuthorizing(false));
-  }, [user, query, authorize, logout]);
+  }, [query, authorize, logout]);
 
   useEffect(() => {
     if (isAuthorizing) {

@@ -4,73 +4,53 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useUser } from "@/components/globalContext/hooks/useUser";
-import useAuth from "@/hooks/auth.hook";
+import { useGoogleAuthToken } from "@/components/globalContext/hooks/useGoogleAuthToken";
 import useQuery from "@/hooks/query.hook";
+import useAuth from "@/hooks/auth.hook";
 import Input from "@/components/input/Input";
 import SubmitWrapper from "@/components/submitWrapper/SubmitWrapper";
 import UserSpinner from "@/components/loadingSpinners/UserSpinner";
-import {
-  COMPLETE_PROFILE_ENDPOINT,
-  DELETE_UNFINISHED_PROFILE_ENDPOINT,
-} from "@/constants/queryPaths";
+import { COMPLETE_PROFILE_ENDPOINT } from "@/constants/queryPaths";
 import { fields } from "./fields";
 import schema from "./schema";
 import styles from "./page.module.css";
 
 export default function CompleteProfile() {
-  const { user, setUser } = useUser();
-  const { logout } = useAuth();
+  const { googleAuthToken, setGoogleAuthToken } = useGoogleAuthToken();
+  const { authorize } = useAuth();
   const [error, setError] = useState(null);
   const router = useRouter();
+  const { query, queryState, resetQueryState } = useQuery();
 
   const {
     control,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitSuccessful },
+    formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
   });
 
-  const shouldRedirect = !user || user.admin || user.name;
-
   useEffect(() => {
-    if (shouldRedirect) {
-      router.replace("/");
+    if (!googleAuthToken) {
+      router.back();
     }
-  }, [shouldRedirect]);
-
-  useEffect(() => {
-    if (isSubmitSuccessful || shouldRedirect) {
-      return;
-    }
-
-    const onBeforeUnload = () => {
-      query(DELETE_UNFINISHED_PROFILE_ENDPOINT, { method: "DELETE" });
-      logout();
-    };
-
-    window.addEventListener("beforeunload", onBeforeUnload);
-    window.addEventListener("popstate", onBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", onBeforeUnload);
-      window.removeEventListener("popstate", onBeforeUnload);
-    };
-  }, [isSubmitSuccessful, shouldRedirect, logout]);
-
-  const { query, queryState, resetQueryState } = useQuery();
+  }, []);
 
   const onSubmit = async (values) => {
     try {
       const res = await query(COMPLETE_PROFILE_ENDPOINT, {
-        method: "PATCH",
+        method: "POST",
         json: true,
         body: JSON.stringify(values),
+        authorize: false,
+        headers: {
+          authorization: `Bearer ${googleAuthToken}`,
+        },
       });
 
-      setUser(res);
+      authorize({ user: res, token: googleAuthToken });
+      setGoogleAuthToken(null);
       reset();
       router.push("/");
     } catch (err) {

@@ -9,11 +9,10 @@ const useQuery = () => {
   const [queryState, setQueryState] = useState(IDLE);
 
   const query = useCallback(async (url, settings) => {
-    const { method, body, json, authorize } = {
+    const { method, body, json, authorize, headers } = {
       ...defaultQuerySettings,
       ...(settings ?? {}),
     };
-    const headers = {};
 
     setQueryState(PENDING);
 

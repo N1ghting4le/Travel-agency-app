@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@/components/globalContext/hooks/useUser";
+import { useGoogleAuthToken } from "@/components/globalContext/hooks/useGoogleAuthToken";
 import useQuery from "./query.hook";
 import { GOOGLE_AUTH_ENDPOINT } from "@/constants/queryPaths";
 import { useCallback } from "react";
@@ -10,6 +11,7 @@ import { TOKEN_STORAGE_KEY } from "./constants";
 
 const useAuth = () => {
   const { setUser } = useUser();
+  const { setGoogleAuthToken } = useGoogleAuthToken();
   const router = useRouter();
   const { query, queryState: authQueryState } = useQuery();
 
@@ -32,11 +34,11 @@ const useAuth = () => {
         body: JSON.stringify({ credential }),
       });
 
-      authorize(res);
-
-      if (res.newUser) {
+      if (!res.user.id) {
+        setGoogleAuthToken(res.token);
         router.push("/complete-profile");
       } else {
+        authorize(res);
         router.push("/");
       }
     },

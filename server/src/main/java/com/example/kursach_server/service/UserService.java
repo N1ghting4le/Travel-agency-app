@@ -120,24 +120,17 @@ public class UserService {
             if (idToken != null) {
                 GoogleIdToken.Payload payload = idToken.getPayload();
                 String email = payload.getEmail();
-
-                boolean isNewUser = false;
                 User user = userRepository.findByEmail(email).orElse(null);
 
                 if (user == null) {
-                    isNewUser = true;
                     user = new User();
                     user.setEmail(email);
-                    user.setName("");
-                    user.setSurname("");
-                    user.setPhoneNumber("");
                     user.setRole(Roles.USER);
-                    user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-                    user = userRepository.save(user);
                 }
 
                 String token = jwtTokenUtil.generateToken(user.getEmail(), user.getRole());
-                return new UserWithTokenResponseDTO(token, user, isNewUser);
+
+                return new UserWithTokenResponseDTO(token, user);
             } else {
                 throw new ForbiddenException("Недействительный Google токен.");
             }
@@ -147,18 +140,19 @@ public class UserService {
     }
 
     public UserResponseDTO completeProfile(CompleteProfileDTO completeProfileDTO, HttpServletRequest request)
-        throws UserNotExistsException, EntityAlreadyExistsException {
-        String email = Utils.getUserEmail(request);
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new UserNotExistsException("Пользователь не найден"));
-
+        throws EntityAlreadyExistsException {
         if (userRepository.existsByPhoneNumber(completeProfileDTO.getPhoneNumber())) {
             throw new EntityAlreadyExistsException("Пользователь с этим номером телефона уже существует");
         }
 
+        String email = Utils.getUserEmail(request);
+        User user = new User();
+        user.setEmail(email);
         user.setName(completeProfileDTO.getName());
         user.setSurname(completeProfileDTO.getSurname());
         user.setPhoneNumber(completeProfileDTO.getPhoneNumber());
+        user.setRole(Roles.USER);
+        user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
         userRepository.save(user);
 
         return new UserResponseDTO(user);

@@ -42,11 +42,11 @@ public class UserController {
         return userService.googleAuth(request.getCredential());
     }
 
-    @PatchMapping("/completeProfile")
+    @PostMapping("/completeProfile")
     public UserResponseDTO completeProfile(
         @Valid @RequestBody CompleteProfileDTO completeProfileDTO,
         HttpServletRequest request
-    ) throws UserNotExistsException, EntityAlreadyExistsException {
+    ) throws EntityAlreadyExistsException {
         return userService.completeProfile(completeProfileDTO, request);
     }
 

@@ -5,6 +5,7 @@ export const defaultQuerySettings = {
   body: null,
   json: false,
   authorize: true,
+  headers: {},
 };
 
 export const initialPagination = {
