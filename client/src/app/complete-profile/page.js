@@ -33,14 +33,16 @@ export default function CompleteProfile() {
     resolver: yupResolver(schema),
   });
 
-  useEffect(() => {
-    if (!user || user.admin || user.name) {
-      router.replace("/");
-    }
-  }, [user]);
+  const shouldRedirect = !user || user.admin || user.name;
 
   useEffect(() => {
-    if (isSubmitSuccessful) {
+    if (shouldRedirect) {
+      router.replace("/");
+    }
+  }, [shouldRedirect]);
+
+  useEffect(() => {
+    if (isSubmitSuccessful || shouldRedirect) {
       return;
     }
 
@@ -54,7 +56,7 @@ export default function CompleteProfile() {
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
-  }, [isSubmitSuccessful, logout]);
+  }, [isSubmitSuccessful, shouldRedirect, logout]);
 
   const { query, queryState, resetQueryState } = useQuery();
 
