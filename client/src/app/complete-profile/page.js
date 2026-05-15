@@ -52,9 +52,11 @@ export default function CompleteProfile() {
     };
 
     window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("popstate", onBeforeUnload);
 
     return () => {
       window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("popstate", onBeforeUnload);
     };
   }, [isSubmitSuccessful, shouldRedirect, logout]);
 
